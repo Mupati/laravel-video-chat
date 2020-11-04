@@ -52,14 +52,14 @@
           </div>
           <div class="action-btns">
             <button type="button" class="btn btn-info" @click="toggleMuteAudio">
-              {{ mutedAudio ? "Mute" : "Unmute" }}
+              {{ mutedAudio ? "Unmute" : "Mute" }}
             </button>
             <button
               type="button"
               class="btn btn-primary mx-4"
               @click="toggleMuteVideo"
             >
-              {{ mutedVideo ? "HideVideo" : "ShowVideo" }}
+              {{ mutedVideo ? "ShowVideo" : "HideVideo" }}
             </button>
             <button type="button" class="btn btn-danger" @click="endCall">
               EndCall
@@ -384,6 +384,9 @@ export default {
       videoElem.srcObject = null;
     },
     endCall() {
+      // if video or audio is muted, enable it so that the stopStreamedVideo method will work
+      if (!this.mutedVideo) this.toggleMuteVideo();
+      if (!this.mutedAudio) this.toggleMuteAudio();
       this.stopStreamedVideo(this.$refs.userVideo);
       if (this.authuserid === this.videoCallParams.caller) {
         this.videoCallParams.peer1.destroy();
