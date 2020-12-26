@@ -25,10 +25,10 @@
 
 ## Testing Video Call
 1. Visit Demo url: https://laravel-video-call.herokuapp.com/login
-2. Login with these test accounts and test it 
-    email            password
-    foo@example.com  DY6m7feJtbnx3ud
-    bar@example.com  Me3tm5reQpWcn3Q
+2. Login with these test accounts and test it <br/>
+    email:            password <br/>
+    foo@example.com:  DY6m7feJtbnx3ud<br/>
+    bar@example.com:  Me3tm5reQpWcn3Q<br/>
 
 ### Incoming Call UI
 ![Incoming Call](https://dev-to-uploads.s3.amazonaws.com/i/1qk47qwka8iz0m43tmdu.png)
