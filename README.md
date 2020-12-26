@@ -22,6 +22,14 @@
 4. Click the link that takes you to the video chat page for both logged in users
 5. Call a user which is indicated online and receive from the  other.
 
+
+## Testing Video Call
+1. Visit Demo url: https://laravel-video-call.herokuapp.com/login
+2. Login with these test accounts and test it 
+    email            password
+    foo@example.com  DY6m7feJtbnx3ud
+    bar@example.com  Me3tm5reQpWcn3Q
+
 ### Incoming Call UI
 ![Incoming Call](https://dev-to-uploads.s3.amazonaws.com/i/1qk47qwka8iz0m43tmdu.png)
 
