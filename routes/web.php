@@ -15,9 +15,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+
 Route::get('/', function () {
     return view('welcome');
 });
+
 
 Route::get('/video-chat', function () {
     // fetch all users apart from the authenticated user
@@ -30,6 +33,6 @@ Route::post('/video/call-user', 'App\Http\Controllers\VideoChatController@callUs
 Route::post('/video/accept-call', 'App\Http\Controllers\VideoChatController@acceptCall');
 
 
-Auth::routes();
-
+// Auth::routes();
+Auth::routes(['register' => false]);
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
