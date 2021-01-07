@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['middleware' => ['auth:sanctum']], function () {
+    Route::post('/logout', 'App\Http\Controllers\Whatsapp\AuthController@logout');
 });
+Route::post('/register', 'App\Http\Controllers\Whatsapp\AuthController@register');
+Route::post('/login', 'App\Http\Controllers\Whatsapp\AuthController@login');
