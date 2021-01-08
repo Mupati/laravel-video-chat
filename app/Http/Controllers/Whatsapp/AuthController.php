@@ -65,4 +65,14 @@ class AuthController extends Controller
 
         return response()->json(['success' => true, "message" => "Logout successfull"], 200);
     }
+
+    public function fetchAuthUser()
+    {
+        return Auth::user();
+    }
+
+    public function fetchAllUsers()
+    {
+        return User::where('id', '!=', Auth::id())->get();
+    }
 }
