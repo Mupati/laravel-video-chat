@@ -20,3 +20,10 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('presence-video-channel', function ($user) {
     return ['id' => $user->id, 'name' => $user->name];
 });
+
+Broadcast::channel('wossop-channel', function ($user) {
+    // When a user subscribes to this channel it means they've logged in
+    // so you can store the current timestamp  in the database. this will help
+    // us get their last login time and maybe device details
+    return ['id' => $user->id, 'name' => $user->name];
+});

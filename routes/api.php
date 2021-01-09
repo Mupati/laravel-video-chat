@@ -21,3 +21,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 });
 Route::post('/register', 'App\Http\Controllers\Whatsapp\AuthController@register');
 Route::post('/login', 'App\Http\Controllers\Whatsapp\AuthController@login');
+
+// Broadcast routes for API
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
