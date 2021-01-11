@@ -27,9 +27,16 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($request->only('email', 'password'))) {
-            Log::info('type: Login, user:' . $request->email . ', datetime:' . now()->toDateTimeString());
+            Log::info('type: Login, user:' . $request->email . ', datetime:' . now()->toDateTimeString() . ', client_ip: ' . $request->getClientIp());
 
             $token = $this->generateToken($request)['token'];
+
+            // Update login time and IP Address used.
+            Auth::user()->update([
+                'last_login_at' => now()->toDateTimeString(),
+                'last_login_ip' => $request->getClientIp()
+            ]);
+
             return response()->json(['user' => Auth::user(), 'token' => $token], 200);
         }
 

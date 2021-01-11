@@ -23,7 +23,6 @@ Broadcast::channel('presence-video-channel', function ($user) {
 
 Broadcast::channel('wossop-channel', function ($user) {
     // When a user subscribes to this channel it means they've logged in
-    // so you can store the current timestamp  in the database. this will help
     // us get their last login time and maybe device details
-    return ['id' => $user->id, 'name' => $user->name];
+    return ['id' => $user->id, 'name' => $user->name, 'last_online' => $user->last_login_at];
 });
