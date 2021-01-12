@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
+use App\Events\UpdateLoginTime;
+
 class AuthController extends Controller
 {
 
@@ -47,6 +49,8 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        // TODO: when a new user registers, you can broadcast their details so that they are added to the 
+        // allUsers fetched on the frontend
         $request->validate([
             'name' => ['required'],
             'email' => ['required', 'email', 'unique:users'],
@@ -66,11 +70,21 @@ class AuthController extends Controller
     public function logout()
     {
         $user = Auth::user();
+
+        // Update login time and IP Address used.
+        // This is because when a user logs out, the time they log out
+        // becomes their last login time
+        $user->update([
+            'last_login_at' => now()->toDateTimeString(),
+        ]);
         $user->tokens()->delete();
 
         Log::info('type: Logout, user:' . Auth::user()->email . ', datetime:' . now()->toDateTimeString());
 
-        return response()->json(['success' => true, "message" => "Logout successfull"], 200);
+        // Broadcast your last login at
+        broadcast(new UpdateLoginTime(['id' => $user->id, 'last_login_at' => $user->last_login_at]))->toOthers();
+
+        return response()->json(['success' => true, "message" => "Logout successful"], 200);
     }
 
     public function fetchAuthUser()

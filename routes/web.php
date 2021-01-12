@@ -32,6 +32,13 @@ Route::get('/video-chat', function () {
 Route::post('/video/call-user', 'App\Http\Controllers\VideoChatController@callUser');
 Route::post('/video/accept-call', 'App\Http\Controllers\VideoChatController@acceptCall');
 
+// Agora Video Call Endpoints
+Route::get('/agora-chat', function () {
+    // fetch all users apart from the authenticated user
+    $users = User::where('id', '<>', Auth::id())->get();
+    return view('agora-chat', ['users' => $users]);
+});
+
 
 // Auth::routes();
 Auth::routes(['register' => false]);

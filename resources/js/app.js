@@ -24,6 +24,7 @@ Vue.component(
     require("./components/ExampleComponent.vue").default
 );
 Vue.component("video-chat", require("./components/VideoChat.vue").default);
+Vue.component("agora-chat", require("./components/AgoraChat.vue").default);
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application

@@ -1911,6 +1911,278 @@ module.exports = {
 
 /***/ }),
 
+/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/AgoraChat.vue?vue&type=script&lang=js&":
+/*!********************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/AgoraChat.vue?vue&type=script&lang=js& ***!
+  \********************************************************************************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/regenerator */ "./node_modules/@babel/runtime/regenerator/index.js");
+/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0__);
+
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: "AgoraChat",
+  data: function data() {
+    return {
+      isLoggedIn: false,
+      client: null,
+      name: null,
+      room: null,
+      password: null,
+      isError: false,
+      localStream: null,
+      mutedAudio: false,
+      mutedVideo: false
+    };
+  },
+  created: function created() {
+    this.initializeAgora(); // this.joinRoom();
+  },
+  methods: {
+    generateToken: function generateToken() {
+      return axios.get("/api/generate-agora-token"); // .then((res) => {
+      //   console.log(res);
+      //   return res.data.token;
+      // })
+      // .catch((err) => {
+      //   console.log(err);
+      // });
+    },
+    initializeAgora: function initializeAgora() {
+      var _this = this;
+
+      this.client = AgoraRTC.createClient({
+        mode: "rtc",
+        codec: "h264"
+      });
+      this.client.init("396e04646ef344e5a6c69304f56f59c0", function () {
+        console.log("AgoraRTC client initialized");
+
+        _this.joinRoom();
+      }, function (err) {
+        console.log("AgoraRTC client init failed", err);
+      });
+    },
+    joinRoom: function joinRoom() {
+      var _this2 = this;
+
+      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee() {
+        var tokenRes;
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                console.log("Join Room");
+                _context.next = 3;
+                return _this2.generateToken();
+
+              case 3:
+                tokenRes = _context.sent;
+                console.log(tokenRes.data.token);
+
+                _this2.client.join(tokenRes.data.token, "mupati", 0, function (uid) {
+                  console.log("User " + uid + " join channel successfully");
+                  _this2.isLoggedIn = true;
+
+                  _this2.createLocalStream();
+
+                  _this2.initializedAgoraListeners();
+                }, function (err) {
+                  console.log("Join channel failed", err);
+
+                  _this2.setErrorMessage();
+                });
+
+              case 6:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee);
+      }))();
+    },
+    initializedAgoraListeners: function initializedAgoraListeners() {
+      var _this3 = this;
+
+      //   Register event listeners
+      this.client.on("stream-published", function (evt) {
+        console.log("Publish local stream successfully");
+        console.log(evt);
+      }); //subscribe remote stream
+
+      this.client.on("stream-added", function (_ref) {
+        var stream = _ref.stream;
+        console.log("New stream added: " + stream.getId());
+
+        _this3.client.subscribe(stream, function (err) {
+          console.log("Subscribe stream failed", err);
+        });
+      });
+      this.client.on("stream-subscribed", function (evt) {
+        // Attach remote stream to the remote-video div
+        evt.stream.play("remote-video");
+
+        _this3.client.publish(evt.stream);
+      });
+      this.client.on("stream-removed", function (_ref2) {
+        var stream = _ref2.stream;
+        console.log(String(stream.getId()));
+        stream.close();
+      });
+      this.client.on("peer-online", function (evt) {
+        console.log("peer-online", evt.uid);
+      });
+      this.client.on("peer-leave", function (evt) {
+        var uid = evt.uid;
+        var reason = evt.reason;
+        console.log("remote user left ", uid, "reason: ", reason);
+      });
+      this.client.on("stream-unpublished", function (evt) {
+        console.log(evt);
+      });
+    },
+    createLocalStream: function createLocalStream() {
+      var _this4 = this;
+
+      this.localStream = AgoraRTC.createStream({
+        audio: true,
+        video: true
+      }); // Initialize the local stream
+
+      this.localStream.init(function () {
+        // Play the local stream
+        _this4.localStream.play("local-video"); // Publish the local stream
+
+
+        _this4.client.publish(_this4.localStream, function (err) {
+          console.log("publish local stream", err);
+        });
+      }, function (err) {
+        console.log(err);
+      });
+    },
+    endCall: function endCall() {
+      var _this5 = this;
+
+      this.localStream.close();
+      this.client.leave(function () {
+        console.log("Leave channel successfully");
+        _this5.isLoggedIn = false;
+      }, function (err) {
+        console.log("Leave channel failed");
+      });
+    },
+    setErrorMessage: function setErrorMessage() {
+      var _this6 = this;
+
+      this.isError = true;
+      setTimeout(function () {
+        _this6.isError = false;
+      }, 2000);
+    },
+    handleAudioToggle: function handleAudioToggle() {
+      if (this.mutedAudio) {
+        this.localStream.enableAudio();
+        this.mutedAudio = false;
+      } else {
+        this.localStream.disableAudio();
+        this.mutedAudio = true;
+      }
+    },
+    handleVideoToggle: function handleVideoToggle() {
+      if (this.mutedVideo) {
+        this.localStream.enableVideo();
+        this.mutedVideo = false;
+      } else {
+        this.localStream.disableVideo();
+        this.mutedVideo = true;
+      }
+    }
+  }
+});
+
+/***/ }),
+
 /***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ExampleComponent.vue?vue&type=script&lang=js&":
 /*!***************************************************************************************************************************************************************************!*\
   !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ExampleComponent.vue?vue&type=script&lang=js& ***!
@@ -2172,6 +2444,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
       this.videoCallParams.channel.listen("StartVideoChat", function (_ref) {
         var data = _ref.data;
+        console.log(data);
 
         if (data.type === "incomingCall") {
           // add a new line to the sdp to take care of error
@@ -2213,7 +2486,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
                 });
 
                 _this4.videoCallParams.peer1.on("signal", function (data) {
-                  // send user call signal
+                  console.log(data); // send user call signal
+
                   axios.post("/video/call-user", {
                     user_to_call: id,
                     signal_data: data,
@@ -2245,6 +2519,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
                 _this4.videoCallParams.channel.listen("StartVideoChat", function (_ref2) {
                   var data = _ref2.data;
+                  console.log(data);
 
                   if (data.type === "callAccepted") {
                     if (data.signal.renegotiate) {
@@ -2326,9 +2601,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
                   console.log("call closed accepter");
                 });
 
+                console.log(_this5.videoCallParams.callerSignal);
+
                 _this5.videoCallParams.peer2.signal(_this5.videoCallParams.callerSignal);
 
-              case 12:
+              case 13:
               case "end":
                 return _context2.stop();
             }
@@ -2384,6 +2661,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     endCall: function endCall() {
       var _this6 = this;
 
+      // if video or audio is muted, enable it so that the stopStreamedVideo method will work
+      if (!this.mutedVideo) this.toggleMuteVideo();
+      if (!this.mutedAudio) this.toggleMuteAudio();
       this.stopStreamedVideo(this.$refs.userVideo);
 
       if (this.authuserid === this.videoCallParams.caller) {
@@ -8793,6 +9073,25 @@ function isnan (val) {
 }
 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../webpack/buildin/global.js */ "./node_modules/webpack/buildin/global.js")))
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css&":
+/*!***************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css& ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, "\nmain[data-v-f5a5b2d6] {\n  margin-top: 50px;\n}\n#video-container[data-v-f5a5b2d6] {\n  width: 700px;\n  height: 500px;\n  max-width: 90vw;\n  max-height: 50vh;\n  margin: 0 auto;\n  border: 1px solid #099dfd;\n  position: relative;\n  box-shadow: 1px 1px 11px #9e9e9e;\n  background-color: #fff;\n}\n#local-video[data-v-f5a5b2d6] {\n  width: 30%;\n  height: 30%;\n  position: absolute;\n  left: 10px;\n  bottom: 10px;\n  border: 1px solid #fff;\n  border-radius: 6px;\n  z-index: 2;\n  cursor: pointer;\n}\n#remote-video[data-v-f5a5b2d6] {\n  width: 100%;\n  height: 100%;\n  position: absolute;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  top: 0;\n  z-index: 1;\n  margin: 0;\n  padding: 0;\n  cursor: pointer;\n}\n.action-btns[data-v-f5a5b2d6] {\n  position: absolute;\n  bottom: 20px;\n  left: 50%;\n  margin-left: -50px;\n  z-index: 3;\n  display: flex;\n  flex-direction: row;\n  flex-wrap: wrap;\n}\n#login-form[data-v-f5a5b2d6] {\n  margin-top: 100px;\n}\n", ""]);
+
+// exports
+
 
 /***/ }),
 
@@ -53019,6 +53318,36 @@ function simpleEnd(buf) {
 
 /***/ }),
 
+/***/ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css&":
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader!./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css& ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--6-1!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--6-2!../../../node_modules/vue-loader/lib??vue-loader-options!./AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css& */ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css&");
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(/*! ../../../node_modules/style-loader/lib/addStyles.js */ "./node_modules/style-loader/lib/addStyles.js")(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {}
+
+/***/ }),
+
 /***/ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/VideoChat.vue?vue&type=style&index=0&id=737f9f18&scoped=true&lang=css&":
 /*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/style-loader!./node_modules/css-loader??ref--6-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--6-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/VideoChat.vue?vue&type=style&index=0&id=737f9f18&scoped=true&lang=css& ***!
@@ -53712,6 +54041,205 @@ function config (name) {
 
 /***/ }),
 
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/AgoraChat.vue?vue&type=template&id=f5a5b2d6&scoped=true&":
+/*!************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/AgoraChat.vue?vue&type=template&id=f5a5b2d6&scoped=true& ***!
+  \************************************************************************************************************************************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("main", [
+    _vm._m(0),
+    _vm._v(" "),
+    !_vm.isLoggedIn
+      ? _c("section", { attrs: { id: "login-form" } }, [
+          _c("div", { staticClass: "container" }, [
+            _c("div", { staticClass: "row" }, [
+              _c("div", { staticClass: "col-12 col-sm-6 offset-sm-3" }, [
+                _c("form", [
+                  _c("div", { staticClass: "mb-3" }, [
+                    _c("label", { staticClass: "form-label" }, [
+                      _vm._v("Your Name")
+                    ]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.name,
+                          expression: "name"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { type: "text" },
+                      domProps: { value: _vm.name },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.name = $event.target.value
+                        }
+                      }
+                    })
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "mb-3" }, [
+                    _c("label", { staticClass: "form-label" }, [
+                      _vm._v("Room Name")
+                    ]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.room,
+                          expression: "room"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { type: "text" },
+                      domProps: { value: _vm.room },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.room = $event.target.value
+                        }
+                      }
+                    })
+                  ]),
+                  _vm._v(" "),
+                  _vm.isError
+                    ? _c(
+                        "div",
+                        {
+                          staticClass:
+                            "alert alert-warning alert-dismissible fade show",
+                          attrs: { role: "alert" }
+                        },
+                        [
+                          _vm._v(
+                            "\n              Invalid room name or password\n              "
+                          ),
+                          _c("button", {
+                            staticClass: "btn-close",
+                            attrs: {
+                              type: "button",
+                              "data-bs-dismiss": "alert",
+                              "aria-label": "Close"
+                            }
+                          })
+                        ]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "text-center" }, [
+                    _c(
+                      "button",
+                      {
+                        staticClass: "btn btn-primary text-center",
+                        attrs: { disabled: _vm.room === null },
+                        on: {
+                          click: function($event) {
+                            $event.preventDefault()
+                            return _vm.joinRoom($event)
+                          }
+                        }
+                      },
+                      [_vm._v("\n                Join Call\n              ")]
+                    )
+                  ])
+                ])
+              ])
+            ])
+          ])
+        ])
+      : _c("section", { attrs: { id: "video-container" } }, [
+          _c("div", { attrs: { id: "local-video" } }),
+          _vm._v(" "),
+          _c("div", { attrs: { id: "remote-video" } }),
+          _vm._v(" "),
+          _c("div", { staticClass: "action-btns" }, [
+            _c(
+              "button",
+              {
+                staticClass: "btn btn-info",
+                attrs: { type: "button" },
+                on: { click: _vm.handleAudioToggle }
+              },
+              [
+                _vm._v(
+                  "\n        " +
+                    _vm._s(_vm.mutedAudio ? "Unmute" : "Mute") +
+                    "\n      "
+                )
+              ]
+            ),
+            _vm._v(" "),
+            _c(
+              "button",
+              {
+                staticClass: "btn btn-primary mx-4",
+                attrs: { type: "button" },
+                on: { click: _vm.handleVideoToggle }
+              },
+              [
+                _vm._v(
+                  "\n        " +
+                    _vm._s(_vm.mutedVideo ? "ShowVideo" : "HideVideo") +
+                    "\n      "
+                )
+              ]
+            ),
+            _vm._v(" "),
+            _c(
+              "button",
+              {
+                staticClass: "btn btn-danger",
+                attrs: { type: "button" },
+                on: { click: _vm.endCall }
+              },
+              [_vm._v("\n        EndCall\n      ")]
+            )
+          ])
+        ])
+  ])
+}
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "container" }, [
+      _c("div", { staticClass: "row" }, [
+        _c("div", { staticClass: "col-12 text-center" }, [
+          _c("img", {
+            staticClass: "img-fuild",
+            attrs: { src: "img/agora-logo.png", alt: "Agora Logo" }
+          })
+        ])
+      ])
+    ])
+  }
+]
+render._withStripped = true
+
+
+
+/***/ }),
+
 /***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ExampleComponent.vue?vue&type=template&id=299e239e&":
 /*!*******************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ExampleComponent.vue?vue&type=template&id=299e239e& ***!
@@ -53866,7 +54394,7 @@ var render = function() {
                   [
                     _vm._v(
                       "\n            " +
-                        _vm._s(_vm.mutedAudio ? "Mute" : "Unmute") +
+                        _vm._s(_vm.mutedAudio ? "Unmute" : "Mute") +
                         "\n          "
                     )
                   ]
@@ -53882,7 +54410,7 @@ var render = function() {
                   [
                     _vm._v(
                       "\n            " +
-                        _vm._s(_vm.mutedVideo ? "HideVideo" : "ShowVideo") +
+                        _vm._s(_vm.mutedVideo ? "ShowVideo" : "HideVideo") +
                         "\n          "
                     )
                   ]
@@ -66137,6 +66665,7 @@ window.Vue = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.common.
 
 Vue.component("example-component", __webpack_require__(/*! ./components/ExampleComponent.vue */ "./resources/js/components/ExampleComponent.vue")["default"]);
 Vue.component("video-chat", __webpack_require__(/*! ./components/VideoChat.vue */ "./resources/js/components/VideoChat.vue")["default"]);
+Vue.component("agora-chat", __webpack_require__(/*! ./components/AgoraChat.vue */ "./resources/js/components/AgoraChat.vue")["default"]);
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application
@@ -66195,6 +66724,93 @@ window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   cluster: "mt1",
   forceTLS: true
 });
+
+/***/ }),
+
+/***/ "./resources/js/components/AgoraChat.vue":
+/*!***********************************************!*\
+  !*** ./resources/js/components/AgoraChat.vue ***!
+  \***********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _AgoraChat_vue_vue_type_template_id_f5a5b2d6_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./AgoraChat.vue?vue&type=template&id=f5a5b2d6&scoped=true& */ "./resources/js/components/AgoraChat.vue?vue&type=template&id=f5a5b2d6&scoped=true&");
+/* harmony import */ var _AgoraChat_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./AgoraChat.vue?vue&type=script&lang=js& */ "./resources/js/components/AgoraChat.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport *//* harmony import */ var _AgoraChat_vue_vue_type_style_index_0_id_f5a5b2d6_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css& */ "./resources/js/components/AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css&");
+/* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+
+
+
+
+
+
+/* normalize component */
+
+var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__["default"])(
+  _AgoraChat_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
+  _AgoraChat_vue_vue_type_template_id_f5a5b2d6_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _AgoraChat_vue_vue_type_template_id_f5a5b2d6_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  false,
+  null,
+  "f5a5b2d6",
+  null
+  
+)
+
+/* hot reload */
+if (false) { var api; }
+component.options.__file = "resources/js/components/AgoraChat.vue"
+/* harmony default export */ __webpack_exports__["default"] = (component.exports);
+
+/***/ }),
+
+/***/ "./resources/js/components/AgoraChat.vue?vue&type=script&lang=js&":
+/*!************************************************************************!*\
+  !*** ./resources/js/components/AgoraChat.vue?vue&type=script&lang=js& ***!
+  \************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./AgoraChat.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/AgoraChat.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
+
+/***/ }),
+
+/***/ "./resources/js/components/AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css&":
+/*!********************************************************************************************************!*\
+  !*** ./resources/js/components/AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css& ***!
+  \********************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_style_index_0_id_f5a5b2d6_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader!../../../node_modules/css-loader??ref--6-1!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--6-2!../../../node_modules/vue-loader/lib??vue-loader-options!./AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css& */ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/AgoraChat.vue?vue&type=style&index=0&id=f5a5b2d6&scoped=true&lang=css&");
+/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_style_index_0_id_f5a5b2d6_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_style_index_0_id_f5a5b2d6_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_style_index_0_id_f5a5b2d6_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_6_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_6_2_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_style_index_0_id_f5a5b2d6_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+
+
+/***/ }),
+
+/***/ "./resources/js/components/AgoraChat.vue?vue&type=template&id=f5a5b2d6&scoped=true&":
+/*!******************************************************************************************!*\
+  !*** ./resources/js/components/AgoraChat.vue?vue&type=template&id=f5a5b2d6&scoped=true& ***!
+  \******************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_template_id_f5a5b2d6_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./AgoraChat.vue?vue&type=template&id=f5a5b2d6&scoped=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/AgoraChat.vue?vue&type=template&id=f5a5b2d6&scoped=true&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_template_id_f5a5b2d6_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_template_id_f5a5b2d6_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+
+
 
 /***/ }),
 
