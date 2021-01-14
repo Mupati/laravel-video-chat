@@ -2000,11 +2000,26 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "AgoraChat",
+  props: ["authuser", "authuserid", "allusers", "agora_id"],
   data: function data() {
     return {
-      isLoggedIn: false,
+      callPlaced: false,
       client: null,
       name: null,
       room: null,
@@ -2012,77 +2027,217 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       isError: false,
       localStream: null,
       mutedAudio: false,
-      mutedVideo: false
+      mutedVideo: false,
+      userOnlineChannel: null,
+      onlineUsers: [],
+      incomingCall: false,
+      agoraChannel: null
     };
   },
-  created: function created() {
-    this.initializeAgora(); // this.joinRoom();
+  mounted: function mounted() {
+    // this.initializeAgora();
+    // this.joinRoom();
+    console.log(this.authuserid);
+    this.initUserOnlineChannel();
+    this.initUserOnlineListeners();
   },
+  // computed: {
+  //   incomingCall () {
+  //   }
+  // },
   methods: {
-    generateToken: function generateToken() {
-      return axios.get("/api/generate-agora-token"); // .then((res) => {
-      //   console.log(res);
-      //   return res.data.token;
-      // })
-      // .catch((err) => {
-      //   console.log(err);
-      // });
+    initUserOnlineChannel: function initUserOnlineChannel() {
+      this.userOnlineChannel = window.Echo.join("agora-online-channel");
+    },
+    initUserOnlineListeners: function initUserOnlineListeners() {
+      var _this = this;
+
+      this.userOnlineChannel.here(function (users) {
+        console.log(users);
+        _this.onlineUsers = users;
+      });
+      this.userOnlineChannel.joining(function (user) {
+        console.log(user); // check user availability
+
+        var joiningUserIndex = _this.onlineUsers.findIndex(function (data) {
+          return data.id === user.id;
+        });
+
+        if (joiningUserIndex < 0) {
+          _this.onlineUsers.push(user);
+        }
+      });
+      this.userOnlineChannel.leaving(function (user) {
+        console.log(user);
+
+        var leavingUserIndex = _this.onlineUsers.findIndex(function (data) {
+          return data.id === user.id;
+        });
+
+        _this.onlineUsers.splice(leavingUserIndex, 1);
+      }); // listen to incomming call
+
+      this.userOnlineChannel.listen("MakeAgoraCall", function (_ref) {
+        var data = _ref.data;
+        console.log("userToCall: ", data.userToCall);
+        console.log("authuserid", _this.authuserid);
+        console.log(data.userToCall === _this.authuserid);
+
+        if (data.type === "incomingCall" && parseInt(data.userToCall) === parseInt(_this.authuserid)) {
+          _this.incomingCall = true;
+          _this.agoraChannel = data.channelName;
+        }
+      });
+    },
+    getUserOnlineStatus: function getUserOnlineStatus(id) {
+      var onlineUserIndex = this.onlineUsers.findIndex(function (data) {
+        return data.id === id;
+      });
+
+      if (onlineUserIndex < 0) {
+        return "Offline";
+      }
+
+      return "Online";
+    },
+    placeCall: function placeCall(id, calleeName) {
+      var _this2 = this;
+
+      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee() {
+        var roomName, tokenRes;
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.prev = 0;
+                // User Subscribes to Agora Channel When they visit this page.
+                // When they place a call they send a unique room name.
+                // when the receipient gets that unique room name, they use it to join the call.
+                // room_name = the caller's and the callee's id. you can use anything. tho.
+                roomName = "".concat(_this2.authuser, "_").concat(id, "_").concat(calleeName);
+                _context.next = 4;
+                return _this2.generateToken(roomName);
+
+              case 4:
+                tokenRes = _context.sent;
+                console.log("tokenRes", tokenRes); // Broadcasts a call event to the callee and also gets back the token
+
+                _context.next = 8;
+                return axios.post("/agora/call-user", {
+                  user_to_call: id,
+                  username: _this2.authuser,
+                  channel_name: roomName
+                });
+
+              case 8:
+                _this2.initializeAgora();
+
+                _this2.joinRoom(tokenRes.data, roomName);
+
+                _context.next = 15;
+                break;
+
+              case 12:
+                _context.prev = 12;
+                _context.t0 = _context["catch"](0);
+                console.log(_context.t0);
+
+              case 15:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, null, [[0, 12]]);
+      }))();
+    },
+    acceptCall: function acceptCall() {
+      var _this3 = this;
+
+      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee2() {
+        var tokenRes;
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _this3.initializeAgora();
+
+                _context2.next = 3;
+                return _this3.generateToken(_this3.agoraChannel);
+
+              case 3:
+                tokenRes = _context2.sent;
+                console.log("accept tokenREs", tokenRes);
+
+                _this3.joinRoom(tokenRes.data, _this3.agoraChannel);
+
+                _this3.incomingCall = false;
+                _this3.callPlaced = true;
+
+              case 8:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2);
+      }))();
+    },
+    declineCall: function declineCall() {
+      console.log("decline call");
+    },
+    generateToken: function generateToken(channelName) {
+      return axios.post("/agora/token", {
+        channelName: channelName
+      });
     },
     initializeAgora: function initializeAgora() {
-      var _this = this;
+      var _this4 = this;
 
       this.client = AgoraRTC.createClient({
         mode: "rtc",
         codec: "h264"
       });
-      this.client.init("396e04646ef344e5a6c69304f56f59c0", function () {
+      this.client.init(this.agora_id, function () {
         console.log("AgoraRTC client initialized");
 
-        _this.joinRoom();
+        _this4.joinRoom();
       }, function (err) {
         console.log("AgoraRTC client init failed", err);
       });
     },
-    joinRoom: function joinRoom() {
-      var _this2 = this;
+    joinRoom: function joinRoom(token, channel) {
+      var _this5 = this;
 
-      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee() {
-        var tokenRes;
-        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee$(_context) {
+      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee3() {
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee3$(_context3) {
           while (1) {
-            switch (_context.prev = _context.next) {
+            switch (_context3.prev = _context3.next) {
               case 0:
-                console.log("Join Room");
-                _context.next = 3;
-                return _this2.generateToken();
-
-              case 3:
-                tokenRes = _context.sent;
-                console.log(tokenRes.data.token);
-
-                _this2.client.join(tokenRes.data.token, "mupati", 0, function (uid) {
+                // console.log("Join Room");
+                // const tokenRes = await this.generateToken();
+                // console.log(tokenRes);
+                _this5.client.join(token, channel, _this5.authuser, function (uid) {
                   console.log("User " + uid + " join channel successfully");
-                  _this2.isLoggedIn = true;
+                  _this5.callPlaced = true;
 
-                  _this2.createLocalStream();
+                  _this5.createLocalStream();
 
-                  _this2.initializedAgoraListeners();
+                  _this5.initializedAgoraListeners();
                 }, function (err) {
                   console.log("Join channel failed", err);
 
-                  _this2.setErrorMessage();
+                  _this5.setErrorMessage();
                 });
 
-              case 6:
+              case 1:
               case "end":
-                return _context.stop();
+                return _context3.stop();
             }
           }
-        }, _callee);
+        }, _callee3);
       }))();
     },
     initializedAgoraListeners: function initializedAgoraListeners() {
-      var _this3 = this;
+      var _this6 = this;
 
       //   Register event listeners
       this.client.on("stream-published", function (evt) {
@@ -2090,11 +2245,11 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         console.log(evt);
       }); //subscribe remote stream
 
-      this.client.on("stream-added", function (_ref) {
-        var stream = _ref.stream;
+      this.client.on("stream-added", function (_ref2) {
+        var stream = _ref2.stream;
         console.log("New stream added: " + stream.getId());
 
-        _this3.client.subscribe(stream, function (err) {
+        _this6.client.subscribe(stream, function (err) {
           console.log("Subscribe stream failed", err);
         });
       });
@@ -2102,10 +2257,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         // Attach remote stream to the remote-video div
         evt.stream.play("remote-video");
 
-        _this3.client.publish(evt.stream);
+        _this6.client.publish(evt.stream);
       });
-      this.client.on("stream-removed", function (_ref2) {
-        var stream = _ref2.stream;
+      this.client.on("stream-removed", function (_ref3) {
+        var stream = _ref3.stream;
         console.log(String(stream.getId()));
         stream.close();
       });
@@ -2122,7 +2277,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       });
     },
     createLocalStream: function createLocalStream() {
-      var _this4 = this;
+      var _this7 = this;
 
       this.localStream = AgoraRTC.createStream({
         audio: true,
@@ -2131,10 +2286,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
       this.localStream.init(function () {
         // Play the local stream
-        _this4.localStream.play("local-video"); // Publish the local stream
+        _this7.localStream.play("local-video"); // Publish the local stream
 
 
-        _this4.client.publish(_this4.localStream, function (err) {
+        _this7.client.publish(_this7.localStream, function (err) {
           console.log("publish local stream", err);
         });
       }, function (err) {
@@ -2142,39 +2297,39 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       });
     },
     endCall: function endCall() {
-      var _this5 = this;
+      var _this8 = this;
 
       this.localStream.close();
       this.client.leave(function () {
         console.log("Leave channel successfully");
-        _this5.isLoggedIn = false;
+        _this8.callPlaced = false;
       }, function (err) {
         console.log("Leave channel failed");
       });
     },
     setErrorMessage: function setErrorMessage() {
-      var _this6 = this;
+      var _this9 = this;
 
       this.isError = true;
       setTimeout(function () {
-        _this6.isError = false;
+        _this9.isError = false;
       }, 2000);
     },
     handleAudioToggle: function handleAudioToggle() {
       if (this.mutedAudio) {
-        this.localStream.enableAudio();
+        this.localStream.unmuteAudio();
         this.mutedAudio = false;
       } else {
-        this.localStream.disableAudio();
+        this.localStream.muteAudio();
         this.mutedAudio = true;
       }
     },
     handleVideoToggle: function handleVideoToggle() {
       if (this.mutedVideo) {
-        this.localStream.enableVideo();
+        this.localStream.muteVideo();
         this.mutedVideo = false;
       } else {
-        this.localStream.disableVideo();
+        this.localStream.unmuteVideo();
         this.mutedVideo = true;
       }
     }
@@ -54059,114 +54214,89 @@ var render = function() {
   return _c("main", [
     _vm._m(0),
     _vm._v(" "),
-    !_vm.isLoggedIn
-      ? _c("section", { attrs: { id: "login-form" } }, [
-          _c("div", { staticClass: "container" }, [
-            _c("div", { staticClass: "row" }, [
-              _c("div", { staticClass: "col-12 col-sm-6 offset-sm-3" }, [
-                _c("form", [
-                  _c("div", { staticClass: "mb-3" }, [
-                    _c("label", { staticClass: "form-label" }, [
-                      _vm._v("Your Name")
-                    ]),
-                    _vm._v(" "),
-                    _c("input", {
-                      directives: [
-                        {
-                          name: "model",
-                          rawName: "v-model",
-                          value: _vm.name,
-                          expression: "name"
-                        }
-                      ],
-                      staticClass: "form-control",
-                      attrs: { type: "text" },
-                      domProps: { value: _vm.name },
-                      on: {
-                        input: function($event) {
-                          if ($event.target.composing) {
-                            return
-                          }
-                          _vm.name = $event.target.value
-                        }
-                      }
-                    })
-                  ]),
-                  _vm._v(" "),
-                  _c("div", { staticClass: "mb-3" }, [
-                    _c("label", { staticClass: "form-label" }, [
-                      _vm._v("Room Name")
-                    ]),
-                    _vm._v(" "),
-                    _c("input", {
-                      directives: [
-                        {
-                          name: "model",
-                          rawName: "v-model",
-                          value: _vm.room,
-                          expression: "room"
-                        }
-                      ],
-                      staticClass: "form-control",
-                      attrs: { type: "text" },
-                      domProps: { value: _vm.room },
-                      on: {
-                        input: function($event) {
-                          if ($event.target.composing) {
-                            return
-                          }
-                          _vm.room = $event.target.value
-                        }
-                      }
-                    })
-                  ]),
-                  _vm._v(" "),
-                  _vm.isError
-                    ? _c(
-                        "div",
-                        {
-                          staticClass:
-                            "alert alert-warning alert-dismissible fade show",
-                          attrs: { role: "alert" }
-                        },
-                        [
-                          _vm._v(
-                            "\n              Invalid room name or password\n              "
-                          ),
-                          _c("button", {
-                            staticClass: "btn-close",
-                            attrs: {
-                              type: "button",
-                              "data-bs-dismiss": "alert",
-                              "aria-label": "Close"
-                            }
-                          })
-                        ]
-                      )
-                    : _vm._e(),
-                  _vm._v(" "),
-                  _c("div", { staticClass: "text-center" }, [
-                    _c(
-                      "button",
-                      {
-                        staticClass: "btn btn-primary text-center",
-                        attrs: { disabled: _vm.room === null },
-                        on: {
-                          click: function($event) {
-                            $event.preventDefault()
-                            return _vm.joinRoom($event)
-                          }
-                        }
-                      },
-                      [_vm._v("\n                Join Call\n              ")]
-                    )
+    _c("div", { staticClass: "container" }, [
+      _c("div", { staticClass: "row" }, [
+        _c("div", { staticClass: "col" }, [
+          _c(
+            "div",
+            { staticClass: "btn-group", attrs: { role: "group" } },
+            _vm._l(_vm.allusers, function(user) {
+              return _c(
+                "button",
+                {
+                  key: user.id,
+                  staticClass: "btn btn-primary mr-2",
+                  attrs: { type: "button" },
+                  on: {
+                    click: function($event) {
+                      return _vm.placeCall(user.id, user.name)
+                    }
+                  }
+                },
+                [
+                  _vm._v(
+                    "\n            Call " + _vm._s(user.name) + "\n            "
+                  ),
+                  _c("span", { staticClass: "badge badge-light" }, [
+                    _vm._v(_vm._s(_vm.getUserOnlineStatus(user.id)))
                   ])
-                ])
+                ]
+              )
+            }),
+            0
+          )
+        ])
+      ]),
+      _vm._v(" "),
+      _vm.incomingCall
+        ? _c("div", { staticClass: "row" }, [
+            _c("div", { staticClass: "col-12" }, [
+              _vm._m(1),
+              _vm._v(" "),
+              _c(
+                "div",
+                { staticClass: "btn-group", attrs: { role: "group" } },
+                [
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-danger",
+                      attrs: { type: "button", "data-dismiss": "modal" },
+                      on: { click: _vm.declineCall }
+                    },
+                    [_vm._v("\n            Decline\n          ")]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-success ml-5",
+                      attrs: { type: "button" },
+                      on: { click: _vm.acceptCall }
+                    },
+                    [_vm._v("\n            Accept\n          ")]
+                  )
+                ]
+              )
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "col-12" }, [
+              _c("audio", { ref: "callRingtone", attrs: { controls: "" } }, [
+                _c("source", {
+                  attrs: {
+                    src:
+                      "https://res.cloudinary.com/mupati/video/upload/v1610644805/audio/ringtone.mp3",
+                    type: "audio/mpeg"
+                  }
+                })
               ])
             ])
           ])
-        ])
-      : _c("section", { attrs: { id: "video-container" } }, [
+        : _vm._e()
+    ]),
+    _vm._v(" "),
+    _vm.callPlaced
+      ? _c("section", { attrs: { id: "video-container" } }, [
           _c("div", { attrs: { id: "local-video" } }),
           _vm._v(" "),
           _c("div", { attrs: { id: "remote-video" } }),
@@ -54215,6 +54345,7 @@ var render = function() {
             )
           ])
         ])
+      : _vm._e()
   ])
 }
 var staticRenderFns = [
@@ -54231,6 +54362,15 @@ var staticRenderFns = [
           })
         ])
       ])
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("p", [
+      _vm._v("Incoming Call From "),
+      _c("strong", [_vm._v("Caller")])
     ])
   }
 ]

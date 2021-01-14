@@ -26,3 +26,7 @@ Broadcast::channel('wossop-channel', function ($user) {
     // us get their last login time and maybe device details
     return ['id' => $user->id, 'name' => $user->name, 'last_online' => $user->last_login_at];
 });
+
+Broadcast::channel('agora-online-channel', function ($user) {
+    return ['id' => $user->id, 'name' => $user->name];
+});

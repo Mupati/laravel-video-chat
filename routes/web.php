@@ -22,21 +22,23 @@ Route::get('/', function () {
 });
 
 
-Route::get('/video-chat', function () {
-    // fetch all users apart from the authenticated user
-    $users = User::where('id', '<>', Auth::id())->get();
-    return view('video-chat', ['users' => $users]);
-});
+Route::group(['middleware' => ['auth']], function () {
 
-// Endpoints to alert call or receive call.
-Route::post('/video/call-user', 'App\Http\Controllers\VideoChatController@callUser');
-Route::post('/video/accept-call', 'App\Http\Controllers\VideoChatController@acceptCall');
+    Route::get('/video-chat', function () {
+        // fetch all users apart from the authenticated user
+        $users = User::where('id', '<>', Auth::id())->get();
+        return view('video-chat', ['users' => $users]);
+    });
 
-// Agora Video Call Endpoints
-Route::get('/agora-chat', function () {
-    // fetch all users apart from the authenticated user
-    $users = User::where('id', '<>', Auth::id())->get();
-    return view('agora-chat', ['users' => $users]);
+    // Endpoints to alert call or receive call.
+    Route::post('/video/call-user', 'App\Http\Controllers\VideoChatController@callUser');
+    Route::post('/video/accept-call', 'App\Http\Controllers\VideoChatController@acceptCall');
+
+    // Agora Video Call Endpoints
+    Route::get('/agora-chat', 'App\Http\Controllers\AgoraVideoController@index');
+    Route::post('/agora/token', 'App\Http\Controllers\AgoraVideoController@token');
+    Route::post('/agora/call-user', 'App\Http\Controllers\AgoraVideoController@callUser');
+    Route::post('/agora/accept-call', 'App\Http\Controllers\AgoraVideoController@acceptCall');
 });
 
 

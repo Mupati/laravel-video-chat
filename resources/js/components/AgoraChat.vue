@@ -7,47 +7,61 @@
         </div>
       </div>
     </div>
-    <section id="login-form" v-if="!isLoggedIn">
-      <div class="container">
-        <div class="row">
-          <div class="col-12 col-sm-6 offset-sm-3">
-            <form>
-              <div class="mb-3">
-                <label class="form-label">Your Name</label>
-                <input type="text" class="form-control" v-model="name" />
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Room Name</label>
-                <input type="text" class="form-control" v-model="room" />
-              </div>
-              <div
-                class="alert alert-warning alert-dismissible fade show"
-                role="alert"
-                v-if="isError"
-              >
-                Invalid room name or password
-                <button
-                  type="button"
-                  class="btn-close"
-                  data-bs-dismiss="alert"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div class="text-center">
-                <button
-                  class="btn btn-primary text-center"
-                  @click.prevent="joinRoom"
-                  :disabled="room === null"
-                >
-                  Join Call
-                </button>
-              </div>
-            </form>
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          <div class="btn-group" role="group">
+            <button
+              type="button"
+              class="btn btn-primary mr-2"
+              v-for="user in allusers"
+              :key="user.id"
+              @click="placeCall(user.id, user.name)"
+            >
+              Call {{ user.name }}
+              <span class="badge badge-light">{{
+                getUserOnlineStatus(user.id)
+              }}</span>
+            </button>
           </div>
         </div>
       </div>
-    </section>
-    <section id="video-container" v-else>
+
+      <!-- Incoming Call  -->
+      <div class="row" v-if="incomingCall">
+        <div class="col-12">
+          <p>Incoming Call From <strong>Caller</strong></p>
+          <div class="btn-group" role="group">
+            <button
+              type="button"
+              class="btn btn-danger"
+              data-dismiss="modal"
+              @click="declineCall"
+            >
+              Decline
+            </button>
+            <button
+              type="button"
+              class="btn btn-success ml-5"
+              @click="acceptCall"
+            >
+              Accept
+            </button>
+          </div>
+        </div>
+        <div class="col-12">
+          <audio controls ref="callRingtone">
+            <source
+              src="https://res.cloudinary.com/mupati/video/upload/v1610644805/audio/ringtone.mp3"
+              type="audio/mpeg"
+            />
+          </audio>
+        </div>
+      </div>
+      <!-- End of Incoming Call  -->
+    </div>
+
+    <section id="video-container" v-if="callPlaced">
       <div id="local-video"></div>
       <div id="remote-video"></div>
 
@@ -73,9 +87,10 @@
 <script>
 export default {
   name: "AgoraChat",
+  props: ["authuser", "authuserid", "allusers", "agora_id"],
   data() {
     return {
-      isLoggedIn: false,
+      callPlaced: false,
       client: null,
       name: null,
       room: null,
@@ -84,29 +99,128 @@ export default {
       localStream: null,
       mutedAudio: false,
       mutedVideo: false,
+      userOnlineChannel: null,
+      onlineUsers: [],
+      incomingCall: false,
+      agoraChannel: null,
     };
   },
 
-  created() {
-    this.initializeAgora();
+  mounted() {
+    // this.initializeAgora();
     // this.joinRoom();
+    console.log(this.authuserid);
+    this.initUserOnlineChannel();
+    this.initUserOnlineListeners();
   },
 
+  // computed: {
+  //   incomingCall () {
+
+  //   }
+  // },
+
   methods: {
-    generateToken() {
-      return axios.get("/api/generate-agora-token");
-      // .then((res) => {
-      //   console.log(res);
-      //   return res.data.token;
-      // })
-      // .catch((err) => {
-      //   console.log(err);
-      // });
+    initUserOnlineChannel() {
+      this.userOnlineChannel = window.Echo.join("agora-online-channel");
     },
+
+    initUserOnlineListeners() {
+      this.userOnlineChannel.here((users) => {
+        console.log(users);
+        this.onlineUsers = users;
+      });
+
+      this.userOnlineChannel.joining((user) => {
+        console.log(user);
+        // check user availability
+        const joiningUserIndex = this.onlineUsers.findIndex(
+          (data) => data.id === user.id
+        );
+        if (joiningUserIndex < 0) {
+          this.onlineUsers.push(user);
+        }
+      });
+
+      this.userOnlineChannel.leaving((user) => {
+        console.log(user);
+        const leavingUserIndex = this.onlineUsers.findIndex(
+          (data) => data.id === user.id
+        );
+        this.onlineUsers.splice(leavingUserIndex, 1);
+      });
+      // listen to incomming call
+      this.userOnlineChannel.listen("MakeAgoraCall", ({ data }) => {
+        console.log("userToCall: ", data.userToCall);
+        console.log("authuserid", this.authuserid);
+        console.log(data.userToCall === this.authuserid);
+        if (
+          data.type === "incomingCall" &&
+          parseInt(data.userToCall) === parseInt(this.authuserid)
+        ) {
+          this.incomingCall = true;
+          this.agoraChannel = data.channelName;
+        }
+      });
+    },
+
+    getUserOnlineStatus(id) {
+      const onlineUserIndex = this.onlineUsers.findIndex(
+        (data) => data.id === id
+      );
+      if (onlineUserIndex < 0) {
+        return "Offline";
+      }
+      return "Online";
+    },
+
+    async placeCall(id, calleeName) {
+      try {
+        // User Subscribes to Agora Channel When they visit this page.
+        // When they place a call they send a unique room name.
+        // when the receipient gets that unique room name, they use it to join the call.
+
+        // room_name = the caller's and the callee's id. you can use anything. tho.
+        const roomName = `${this.authuser}_${id}_${calleeName}`;
+        const tokenRes = await this.generateToken(roomName);
+        console.log("tokenRes", tokenRes);
+        // Broadcasts a call event to the callee and also gets back the token
+        await axios.post("/agora/call-user", {
+          user_to_call: id,
+          username: this.authuser,
+          channel_name: roomName,
+        });
+
+        this.initializeAgora();
+        this.joinRoom(tokenRes.data, roomName);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+
+    async acceptCall() {
+      this.initializeAgora();
+      const tokenRes = await this.generateToken(this.agoraChannel);
+      console.log("accept tokenREs", tokenRes);
+      this.joinRoom(tokenRes.data, this.agoraChannel);
+      this.incomingCall = false;
+      this.callPlaced = true;
+    },
+
+    declineCall() {
+      console.log("decline call");
+    },
+
+    generateToken(channelName) {
+      return axios.post("/agora/token", {
+        channelName,
+      });
+    },
+
     initializeAgora() {
       this.client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
       this.client.init(
-        "396e04646ef344e5a6c69304f56f59c0",
+        this.agora_id,
         () => {
           console.log("AgoraRTC client initialized");
           this.joinRoom();
@@ -117,17 +231,18 @@ export default {
       );
     },
 
-    async joinRoom() {
-      console.log("Join Room");
-      const tokenRes = await this.generateToken();
-      console.log(tokenRes.data.token);
+    async joinRoom(token, channel) {
+      // console.log("Join Room");
+      // const tokenRes = await this.generateToken();
+      // console.log(tokenRes);
+
       this.client.join(
-        tokenRes.data.token,
-        "mupati",
-        0,
+        token,
+        channel,
+        this.authuser,
         (uid) => {
           console.log("User " + uid + " join channel successfully");
-          this.isLoggedIn = true;
+          this.callPlaced = true;
           this.createLocalStream();
           this.initializedAgoraListeners();
         },
@@ -206,7 +321,7 @@ export default {
       this.client.leave(
         () => {
           console.log("Leave channel successfully");
-          this.isLoggedIn = false;
+          this.callPlaced = false;
         },
         (err) => {
           console.log("Leave channel failed");
@@ -223,20 +338,20 @@ export default {
 
     handleAudioToggle() {
       if (this.mutedAudio) {
-        this.localStream.enableAudio();
+        this.localStream.unmuteAudio();
         this.mutedAudio = false;
       } else {
-        this.localStream.disableAudio();
+        this.localStream.muteAudio();
         this.mutedAudio = true;
       }
     },
 
     handleVideoToggle() {
       if (this.mutedVideo) {
-        this.localStream.enableVideo();
+        this.localStream.muteVideo();
         this.mutedVideo = false;
       } else {
-        this.localStream.disableVideo();
+        this.localStream.unmuteVideo();
         this.mutedVideo = true;
       }
     },
