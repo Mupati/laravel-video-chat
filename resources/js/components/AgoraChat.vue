@@ -7,7 +7,7 @@
         </div>
       </div>
     </div>
-    <div class="container">
+    <div class="container my-5">
       <div class="row">
         <div class="col">
           <div class="btn-group" role="group">
@@ -28,9 +28,11 @@
       </div>
 
       <!-- Incoming Call  -->
-      <div class="row" v-if="incomingCall">
+      <div class="row my-5" v-if="incomingCall">
         <div class="col-12">
-          <p>Incoming Call From <strong>Caller</strong></p>
+          <p>
+            Incoming Call From <strong>{{ incomingCaller }}</strong>
+          </p>
           <div class="btn-group" role="group">
             <button
               type="button"
@@ -48,14 +50,6 @@
               Accept
             </button>
           </div>
-        </div>
-        <div class="col-12">
-          <audio controls ref="callRingtone">
-            <source
-              src="https://res.cloudinary.com/mupati/video/upload/v1610644805/audio/ringtone.mp3"
-              type="audio/mpeg"
-            />
-          </audio>
         </div>
       </div>
       <!-- End of Incoming Call  -->
@@ -92,47 +86,38 @@ export default {
     return {
       callPlaced: false,
       client: null,
-      name: null,
-      room: null,
-      password: null,
-      isError: false,
       localStream: null,
       mutedAudio: false,
       mutedVideo: false,
       userOnlineChannel: null,
       onlineUsers: [],
       incomingCall: false,
+      incomingCaller: "",
       agoraChannel: null,
     };
   },
 
   mounted() {
-    // this.initializeAgora();
-    // this.joinRoom();
-    console.log(this.authuserid);
     this.initUserOnlineChannel();
     this.initUserOnlineListeners();
   },
 
-  // computed: {
-  //   incomingCall () {
-
-  //   }
-  // },
-
   methods: {
+    /**
+     * Presence Broadcast Channel Listeners and Methods
+     * Provided by Laravel.
+     * Websockets with Pusher
+     */
     initUserOnlineChannel() {
       this.userOnlineChannel = window.Echo.join("agora-online-channel");
     },
 
     initUserOnlineListeners() {
       this.userOnlineChannel.here((users) => {
-        console.log(users);
         this.onlineUsers = users;
       });
 
       this.userOnlineChannel.joining((user) => {
-        console.log(user);
         // check user availability
         const joiningUserIndex = this.onlineUsers.findIndex(
           (data) => data.id === user.id
@@ -143,22 +128,23 @@ export default {
       });
 
       this.userOnlineChannel.leaving((user) => {
-        console.log(user);
         const leavingUserIndex = this.onlineUsers.findIndex(
           (data) => data.id === user.id
         );
         this.onlineUsers.splice(leavingUserIndex, 1);
       });
+
       // listen to incomming call
       this.userOnlineChannel.listen("MakeAgoraCall", ({ data }) => {
-        console.log("userToCall: ", data.userToCall);
-        console.log("authuserid", this.authuserid);
-        console.log(data.userToCall === this.authuserid);
-        if (
-          data.type === "incomingCall" &&
-          parseInt(data.userToCall) === parseInt(this.authuserid)
-        ) {
+        if (parseInt(data.userToCall) === parseInt(this.authuserid)) {
+          const callerIndex = this.onlineUsers.findIndex(
+            (user) => user.id === data.from
+          );
+          this.incomingCaller = this.onlineUsers[callerIndex]["name"];
           this.incomingCall = true;
+
+          // the channel that was sent over to the user being called is what
+          // the receiver will use to join the call when accepting the call.
           this.agoraChannel = data.channelName;
         }
       });
@@ -176,23 +162,19 @@ export default {
 
     async placeCall(id, calleeName) {
       try {
-        // User Subscribes to Agora Channel When they visit this page.
-        // When they place a call they send a unique room name.
-        // when the receipient gets that unique room name, they use it to join the call.
+        // channelName = the caller's and the callee's id. you can use anything. tho.
+        const channelName = `${this.authuser}_${calleeName}`;
+        const tokenRes = await this.generateToken(channelName);
 
-        // room_name = the caller's and the callee's id. you can use anything. tho.
-        const roomName = `${this.authuser}_${id}_${calleeName}`;
-        const tokenRes = await this.generateToken(roomName);
-        console.log("tokenRes", tokenRes);
         // Broadcasts a call event to the callee and also gets back the token
         await axios.post("/agora/call-user", {
           user_to_call: id,
           username: this.authuser,
-          channel_name: roomName,
+          channel_name: channelName,
         });
 
         this.initializeAgora();
-        this.joinRoom(tokenRes.data, roomName);
+        this.joinRoom(tokenRes.data, channelName);
       } catch (error) {
         console.log(error);
       }
@@ -201,14 +183,15 @@ export default {
     async acceptCall() {
       this.initializeAgora();
       const tokenRes = await this.generateToken(this.agoraChannel);
-      console.log("accept tokenREs", tokenRes);
       this.joinRoom(tokenRes.data, this.agoraChannel);
       this.incomingCall = false;
       this.callPlaced = true;
     },
 
     declineCall() {
-      console.log("decline call");
+      // You can send a request to the caller to
+      // alert them of rejected call
+      this.incomingCall = false;
     },
 
     generateToken(channelName) {
@@ -217,13 +200,15 @@ export default {
       });
     },
 
+    /**
+     * Agora Events and Listeners
+     */
     initializeAgora() {
       this.client = AgoraRTC.createClient({ mode: "rtc", codec: "h264" });
       this.client.init(
         this.agora_id,
         () => {
           console.log("AgoraRTC client initialized");
-          this.joinRoom();
         },
         (err) => {
           console.log("AgoraRTC client init failed", err);
@@ -232,10 +217,6 @@ export default {
     },
 
     async joinRoom(token, channel) {
-      // console.log("Join Room");
-      // const tokenRes = await this.generateToken();
-      // console.log(tokenRes);
-
       this.client.join(
         token,
         channel,
@@ -248,7 +229,6 @@ export default {
         },
         (err) => {
           console.log("Join channel failed", err);
-          this.setErrorMessage();
         }
       );
     },
@@ -329,13 +309,6 @@ export default {
       );
     },
 
-    setErrorMessage() {
-      this.isError = true;
-      setTimeout(() => {
-        this.isError = false;
-      }, 2000);
-    },
-
     handleAudioToggle() {
       if (this.mutedAudio) {
         this.localStream.unmuteAudio();
@@ -348,10 +321,10 @@ export default {
 
     handleVideoToggle() {
       if (this.mutedVideo) {
-        this.localStream.muteVideo();
+        this.localStream.unmuteVideo();
         this.mutedVideo = false;
       } else {
-        this.localStream.unmuteVideo();
+        this.localStream.muteVideo();
         this.mutedVideo = true;
       }
     },

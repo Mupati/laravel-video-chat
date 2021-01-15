@@ -38,7 +38,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/agora-chat', 'App\Http\Controllers\AgoraVideoController@index');
     Route::post('/agora/token', 'App\Http\Controllers\AgoraVideoController@token');
     Route::post('/agora/call-user', 'App\Http\Controllers\AgoraVideoController@callUser');
-    Route::post('/agora/accept-call', 'App\Http\Controllers\AgoraVideoController@acceptCall');
 });
 
 

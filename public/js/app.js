@@ -2008,12 +2008,6 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 //
 //
 //
-//
-//
-//
-//
-//
-//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "AgoraChat",
   props: ["authuser", "authuserid", "allusers", "agora_id"],
@@ -2021,31 +2015,26 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     return {
       callPlaced: false,
       client: null,
-      name: null,
-      room: null,
-      password: null,
-      isError: false,
       localStream: null,
       mutedAudio: false,
       mutedVideo: false,
       userOnlineChannel: null,
       onlineUsers: [],
       incomingCall: false,
+      incomingCaller: "",
       agoraChannel: null
     };
   },
   mounted: function mounted() {
-    // this.initializeAgora();
-    // this.joinRoom();
-    console.log(this.authuserid);
     this.initUserOnlineChannel();
     this.initUserOnlineListeners();
   },
-  // computed: {
-  //   incomingCall () {
-  //   }
-  // },
   methods: {
+    /**
+     * Presence Broadcast Channel Listeners and Methods
+     * Provided by Laravel.
+     * Websockets with Pusher
+     */
     initUserOnlineChannel: function initUserOnlineChannel() {
       this.userOnlineChannel = window.Echo.join("agora-online-channel");
     },
@@ -2053,12 +2042,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       var _this = this;
 
       this.userOnlineChannel.here(function (users) {
-        console.log(users);
         _this.onlineUsers = users;
       });
       this.userOnlineChannel.joining(function (user) {
-        console.log(user); // check user availability
-
+        // check user availability
         var joiningUserIndex = _this.onlineUsers.findIndex(function (data) {
           return data.id === user.id;
         });
@@ -2068,8 +2055,6 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         }
       });
       this.userOnlineChannel.leaving(function (user) {
-        console.log(user);
-
         var leavingUserIndex = _this.onlineUsers.findIndex(function (data) {
           return data.id === user.id;
         });
@@ -2079,12 +2064,16 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
       this.userOnlineChannel.listen("MakeAgoraCall", function (_ref) {
         var data = _ref.data;
-        console.log("userToCall: ", data.userToCall);
-        console.log("authuserid", _this.authuserid);
-        console.log(data.userToCall === _this.authuserid);
 
-        if (data.type === "incomingCall" && parseInt(data.userToCall) === parseInt(_this.authuserid)) {
-          _this.incomingCall = true;
+        if (parseInt(data.userToCall) === parseInt(_this.authuserid)) {
+          var callerIndex = _this.onlineUsers.findIndex(function (user) {
+            return user.id === data.from;
+          });
+
+          _this.incomingCaller = _this.onlineUsers[callerIndex]["name"];
+          _this.incomingCall = true; // the channel that was sent over to the user being called is what
+          // the receiver will use to join the call when accepting the call.
+
           _this.agoraChannel = data.channelName;
         }
       });
@@ -2104,50 +2093,45 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       var _this2 = this;
 
       return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee() {
-        var roomName, tokenRes;
+        var channelName, tokenRes;
         return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
                 _context.prev = 0;
-                // User Subscribes to Agora Channel When they visit this page.
-                // When they place a call they send a unique room name.
-                // when the receipient gets that unique room name, they use it to join the call.
-                // room_name = the caller's and the callee's id. you can use anything. tho.
-                roomName = "".concat(_this2.authuser, "_").concat(id, "_").concat(calleeName);
+                // channelName = the caller's and the callee's id. you can use anything. tho.
+                channelName = "".concat(_this2.authuser, "_").concat(calleeName);
                 _context.next = 4;
-                return _this2.generateToken(roomName);
+                return _this2.generateToken(channelName);
 
               case 4:
                 tokenRes = _context.sent;
-                console.log("tokenRes", tokenRes); // Broadcasts a call event to the callee and also gets back the token
-
-                _context.next = 8;
+                _context.next = 7;
                 return axios.post("/agora/call-user", {
                   user_to_call: id,
                   username: _this2.authuser,
-                  channel_name: roomName
+                  channel_name: channelName
                 });
 
-              case 8:
+              case 7:
                 _this2.initializeAgora();
 
-                _this2.joinRoom(tokenRes.data, roomName);
+                _this2.joinRoom(tokenRes.data, channelName);
 
-                _context.next = 15;
+                _context.next = 14;
                 break;
 
-              case 12:
-                _context.prev = 12;
+              case 11:
+                _context.prev = 11;
                 _context.t0 = _context["catch"](0);
                 console.log(_context.t0);
 
-              case 15:
+              case 14:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, null, [[0, 12]]);
+        }, _callee, null, [[0, 11]]);
       }))();
     },
     acceptCall: function acceptCall() {
@@ -2166,14 +2150,13 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
               case 3:
                 tokenRes = _context2.sent;
-                console.log("accept tokenREs", tokenRes);
 
                 _this3.joinRoom(tokenRes.data, _this3.agoraChannel);
 
                 _this3.incomingCall = false;
                 _this3.callPlaced = true;
 
-              case 8:
+              case 7:
               case "end":
                 return _context2.stop();
             }
@@ -2182,50 +2165,47 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       }))();
     },
     declineCall: function declineCall() {
-      console.log("decline call");
+      // You can send a request to the caller to
+      // alert them of rejected call
+      this.incomingCall = false;
     },
     generateToken: function generateToken(channelName) {
       return axios.post("/agora/token", {
         channelName: channelName
       });
     },
-    initializeAgora: function initializeAgora() {
-      var _this4 = this;
 
+    /**
+     * Agora Events and Listeners
+     */
+    initializeAgora: function initializeAgora() {
       this.client = AgoraRTC.createClient({
         mode: "rtc",
         codec: "h264"
       });
       this.client.init(this.agora_id, function () {
         console.log("AgoraRTC client initialized");
-
-        _this4.joinRoom();
       }, function (err) {
         console.log("AgoraRTC client init failed", err);
       });
     },
     joinRoom: function joinRoom(token, channel) {
-      var _this5 = this;
+      var _this4 = this;
 
       return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee3() {
         return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                // console.log("Join Room");
-                // const tokenRes = await this.generateToken();
-                // console.log(tokenRes);
-                _this5.client.join(token, channel, _this5.authuser, function (uid) {
+                _this4.client.join(token, channel, _this4.authuser, function (uid) {
                   console.log("User " + uid + " join channel successfully");
-                  _this5.callPlaced = true;
+                  _this4.callPlaced = true;
 
-                  _this5.createLocalStream();
+                  _this4.createLocalStream();
 
-                  _this5.initializedAgoraListeners();
+                  _this4.initializedAgoraListeners();
                 }, function (err) {
                   console.log("Join channel failed", err);
-
-                  _this5.setErrorMessage();
                 });
 
               case 1:
@@ -2237,7 +2217,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       }))();
     },
     initializedAgoraListeners: function initializedAgoraListeners() {
-      var _this6 = this;
+      var _this5 = this;
 
       //   Register event listeners
       this.client.on("stream-published", function (evt) {
@@ -2249,7 +2229,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         var stream = _ref2.stream;
         console.log("New stream added: " + stream.getId());
 
-        _this6.client.subscribe(stream, function (err) {
+        _this5.client.subscribe(stream, function (err) {
           console.log("Subscribe stream failed", err);
         });
       });
@@ -2257,7 +2237,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         // Attach remote stream to the remote-video div
         evt.stream.play("remote-video");
 
-        _this6.client.publish(evt.stream);
+        _this5.client.publish(evt.stream);
       });
       this.client.on("stream-removed", function (_ref3) {
         var stream = _ref3.stream;
@@ -2277,7 +2257,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       });
     },
     createLocalStream: function createLocalStream() {
-      var _this7 = this;
+      var _this6 = this;
 
       this.localStream = AgoraRTC.createStream({
         audio: true,
@@ -2286,10 +2266,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
       this.localStream.init(function () {
         // Play the local stream
-        _this7.localStream.play("local-video"); // Publish the local stream
+        _this6.localStream.play("local-video"); // Publish the local stream
 
 
-        _this7.client.publish(_this7.localStream, function (err) {
+        _this6.client.publish(_this6.localStream, function (err) {
           console.log("publish local stream", err);
         });
       }, function (err) {
@@ -2297,23 +2277,15 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       });
     },
     endCall: function endCall() {
-      var _this8 = this;
+      var _this7 = this;
 
       this.localStream.close();
       this.client.leave(function () {
         console.log("Leave channel successfully");
-        _this8.callPlaced = false;
+        _this7.callPlaced = false;
       }, function (err) {
         console.log("Leave channel failed");
       });
-    },
-    setErrorMessage: function setErrorMessage() {
-      var _this9 = this;
-
-      this.isError = true;
-      setTimeout(function () {
-        _this9.isError = false;
-      }, 2000);
     },
     handleAudioToggle: function handleAudioToggle() {
       if (this.mutedAudio) {
@@ -2326,10 +2298,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     },
     handleVideoToggle: function handleVideoToggle() {
       if (this.mutedVideo) {
-        this.localStream.muteVideo();
+        this.localStream.unmuteVideo();
         this.mutedVideo = false;
       } else {
-        this.localStream.unmuteVideo();
+        this.localStream.muteVideo();
         this.mutedVideo = true;
       }
     }
@@ -54214,7 +54186,7 @@ var render = function() {
   return _c("main", [
     _vm._m(0),
     _vm._v(" "),
-    _c("div", { staticClass: "container" }, [
+    _c("div", { staticClass: "container my-5" }, [
       _c("div", { staticClass: "row" }, [
         _c("div", { staticClass: "col" }, [
           _c(
@@ -54249,9 +54221,12 @@ var render = function() {
       ]),
       _vm._v(" "),
       _vm.incomingCall
-        ? _c("div", { staticClass: "row" }, [
+        ? _c("div", { staticClass: "row my-5" }, [
             _c("div", { staticClass: "col-12" }, [
-              _vm._m(1),
+              _c("p", [
+                _vm._v("\n          Incoming Call From "),
+                _c("strong", [_vm._v(_vm._s(_vm.incomingCaller))])
+              ]),
               _vm._v(" "),
               _c(
                 "div",
@@ -54278,18 +54253,6 @@ var render = function() {
                   )
                 ]
               )
-            ]),
-            _vm._v(" "),
-            _c("div", { staticClass: "col-12" }, [
-              _c("audio", { ref: "callRingtone", attrs: { controls: "" } }, [
-                _c("source", {
-                  attrs: {
-                    src:
-                      "https://res.cloudinary.com/mupati/video/upload/v1610644805/audio/ringtone.mp3",
-                    type: "audio/mpeg"
-                  }
-                })
-              ])
             ])
           ])
         : _vm._e()
@@ -54362,15 +54325,6 @@ var staticRenderFns = [
           })
         ])
       ])
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("p", [
-      _vm._v("Incoming Call From "),
-      _c("strong", [_vm._v("Caller")])
     ])
   }
 ]
