@@ -2109,7 +2109,6 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                 _context.next = 7;
                 return axios.post("/agora/call-user", {
                   user_to_call: id,
-                  username: _this2.authuser,
                   channel_name: channelName
                 });
 

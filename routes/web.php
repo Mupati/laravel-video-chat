@@ -40,7 +40,14 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('/agora/call-user', 'App\Http\Controllers\AgoraVideoController@callUser');
 });
 
-
+/**
+ * When you clone the repository, comment out
+ *  Auth::routes(['register' => false]);
+ * and uncomment
+ *   Auth::routes()
+ * so that you can register new users. I disabled the registration endpoint so that my hosted demo won't be abused.
+ * 
+ */
 // Auth::routes();
 Auth::routes(['register' => false]);
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

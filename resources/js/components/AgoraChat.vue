@@ -169,7 +169,6 @@ export default {
         // Broadcasts a call event to the callee and also gets back the token
         await axios.post("/agora/call-user", {
           user_to_call: id,
-          username: this.authuser,
           channel_name: channelName,
         });
 
