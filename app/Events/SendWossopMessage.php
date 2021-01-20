@@ -32,9 +32,4 @@ class SendWossopMessage implements ShouldBroadcast
     {
         return new PresenceChannel('wossop-channel');
     }
-
-    public function broadcastAs()
-    {
-        return 'wossop-message';
-    }
 }

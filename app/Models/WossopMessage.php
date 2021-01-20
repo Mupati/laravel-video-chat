@@ -11,15 +11,4 @@ class WossopMessage extends Model
 
 
     protected $fillable = ['sender', 'receiver', 'message', 'is_read'];
-
-
-    public function sender()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function receiver()
-    {
-        return $this->belongsTo(User::class);
-    }
 }

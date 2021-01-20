@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Whatsapp;
 
+use App\Http\Controllers\Controller;
 use App\Events\SendWossopMessage;
 use App\Models\WossopMessage;
 use Illuminate\Http\Request;
@@ -30,9 +31,10 @@ class WossopMessageController extends Controller
 
         $new_message->save();
 
-        $data = ['sender' => $sender, 'receiver' => $receiver];
+        // $data = ['sender' => $sender, 'receiver' => $receiver, 'message' => $message];
 
-        event(new SendWossopMessage($data));
+
+        event(new SendWossopMessage($new_message));
     }
 
 

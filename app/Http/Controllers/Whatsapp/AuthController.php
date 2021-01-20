@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Whatsapp;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -11,6 +10,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 use App\Events\UpdateLoginTime;
+
+
+use App\Models\User;
+use App\Models\WossopMessage;
 
 class AuthController extends Controller
 {
@@ -94,6 +97,22 @@ class AuthController extends Controller
 
     public function fetchAllUsers()
     {
-        return User::where('id', '!=', Auth::id())->get();
+        $users =  User::where('id', '!=', Auth::id())->get();
+        $results["users"] = $users;
+        foreach ($users as $key => $user) {
+            // fetch users along with the latest message sent or received by them and the authenticated user
+            $users[$key]['latest_message'] = WossopMessage::select(['message', 'created_at'])
+                ->where(function ($query) use ($user) {
+                    $query->where('receiver', $user->id)
+                        ->orWhere('sender', $user->id);
+                })
+                ->where(function ($query) {
+                    $query->where('receiver', Auth::id())
+                        ->orWhere('sender', Auth::id());
+                })
+                ->orderByDesc('id')->limit(1)->get();
+        }
+
+        return $users;
     }
 }
