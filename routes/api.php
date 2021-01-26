@@ -19,6 +19,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/logout', 'App\Http\Controllers\Whatsapp\AuthController@logout');
     Route::get('/user', 'App\Http\Controllers\Whatsapp\AuthController@fetchAuthUser');
     Route::get('/users', 'App\Http\Controllers\Whatsapp\AuthController@fetchAllUsers');
+    Route::get('/contacted-users', 'App\Http\Controllers\Whatsapp\AuthController@fetchContactedUsers');
 
 
     // Messaging Endpoints

@@ -14,6 +14,7 @@ use App\Events\UpdateLoginTime;
 
 use App\Models\User;
 use App\Models\WossopMessage;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -90,6 +91,7 @@ class AuthController extends Controller
         return response()->json(['success' => true, "message" => "Logout successful"], 200);
     }
 
+    // Fetching Users
     public function fetchAuthUser()
     {
         return Auth::user();
@@ -97,22 +99,36 @@ class AuthController extends Controller
 
     public function fetchAllUsers()
     {
-        $users =  User::where('id', '!=', Auth::id())->get();
-        $results["users"] = $users;
-        foreach ($users as $key => $user) {
-            // fetch users along with the latest message sent or received by them and the authenticated user
-            $users[$key]['latest_message'] = WossopMessage::select(['message', 'created_at'])
-                ->where(function ($query) use ($user) {
-                    $query->where('receiver', $user->id)
-                        ->orWhere('sender', $user->id);
-                })
-                ->where(function ($query) {
-                    $query->where('receiver', Auth::id())
-                        ->orWhere('sender', Auth::id());
-                })
-                ->orderByDesc('id')->limit(1)->get();
-        }
+        return User::all();
+    }
 
-        return $users;
+    public function fetchContactedUsers()
+    {
+        $authUser = Auth::id();
+
+        // Fetch the users that have contacted the authenticated user and the number of unread messages.
+        // Add the last message sent or received as well.
+
+        return  DB::select(DB::raw("
+        SELECT mr2.*, mr.message, mr.created_at 
+        FROM 
+            (SELECT r1.id, r1.latest_message_id, wm1.message, wm1.created_at 
+            FROM wossop_messages wm1
+            JOIN
+                (SELECT u.id, u.name, MAX(wm.id) latest_message_id
+                FROM users u 
+                JOIN wossop_messages wm
+                    ON (u.id = wm.receiver AND wm.sender = '$authUser') OR (u.id = wm.sender AND wm.receiver = '$authUser')
+                GROUP BY u.id, u.name) AS r1
+            ON wm1.id = r1.latest_message_id) AS mr
+        JOIN
+            (SELECT u.id, u.name, u.email, u.last_login_at, COUNT(CASE WHEN wm.receiver = '$authUser' AND wm.is_read = 0 THEN 1 END) AS unread_count 
+            FROM users u 
+            JOIN wossop_messages wm
+                ON (u.id = wm.receiver AND wm.sender = '$authUser') OR (u.id = wm.sender AND wm.receiver = '$authUser')
+            GROUP BY u.id, u.name, u.email, u.last_login_at) AS mr2
+        ON mr.id = mr2.id
+        ORDER BY mr.latest_message_id DESC;
+        "));
     }
 }

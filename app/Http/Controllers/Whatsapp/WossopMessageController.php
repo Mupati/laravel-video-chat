@@ -31,9 +31,6 @@ class WossopMessageController extends Controller
 
         $new_message->save();
 
-        // $data = ['sender' => $sender, 'receiver' => $receiver, 'message' => $message];
-
-
         event(new SendWossopMessage($new_message));
     }
 
@@ -49,7 +46,6 @@ class WossopMessageController extends Controller
 
         // If message sent to authenticated user is clicked, set 'is_read' to 1
         WossopMessage::where(['sender' => $user_id, 'receiver' => $auth_user_id])->update(['is_read' => 1]);
-
 
         $messages =  WossopMessage::where(function ($query) use ($user_id, $auth_user_id) {
             $query->where('sender', $user_id)->where('receiver', $auth_user_id);
