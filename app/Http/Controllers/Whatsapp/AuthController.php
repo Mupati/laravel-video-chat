@@ -91,23 +91,24 @@ class AuthController extends Controller
         return response()->json(['success' => true, "message" => "Logout successful"], 200);
     }
 
-    // Fetching Users
+    // Fetch Authenticated User's data
     public function fetchAuthUser()
     {
         return Auth::user();
     }
 
+    // fetch all users apart fromt the authenticated user
     public function fetchAllUsers()
     {
-        return User::all();
+        return User::where('id', '!=', Auth::id())->get();
     }
 
+    // Fetch the users that have contacted the authenticated user and the number of unread messages.
+    // Add the last message sent or received as well.
     public function fetchContactedUsers()
     {
         $authUser = Auth::id();
 
-        // Fetch the users that have contacted the authenticated user and the number of unread messages.
-        // Add the last message sent or received as well.
 
         return  DB::select(DB::raw("
         SELECT mr2.*, mr.message, mr.created_at 
