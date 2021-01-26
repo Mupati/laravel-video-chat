@@ -122,7 +122,7 @@ class AuthController extends Controller
                 GROUP BY u.id, u.name) AS r1
             ON wm1.id = r1.latest_message_id) AS mr
         JOIN
-            (SELECT u.id, u.name, u.email, u.last_login_at, COUNT(CASE WHEN wm.receiver = '$authUser' AND wm.is_read = 0 THEN 1 END) AS unread_count 
+            (SELECT u.id, u.name, u.email, u.last_login_at, COUNT(CASE WHEN wm.receiver = '$authUser' AND wm.is_read = FALSE THEN 1 END) AS unread_count 
             FROM users u 
             JOIN wossop_messages wm
                 ON (u.id = wm.receiver AND wm.sender = '$authUser') OR (u.id = wm.sender AND wm.receiver = '$authUser')
