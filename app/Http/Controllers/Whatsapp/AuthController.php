@@ -13,7 +13,7 @@ use App\Events\UpdateLoginTime;
 
 
 use App\Models\User;
-use App\Models\WossopMessage;
+// use App\Models\WossopMessage;
 use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
@@ -131,5 +131,53 @@ class AuthController extends Controller
         ON mr.id = mr2.id
         ORDER BY mr.latest_message_id DESC;
         "));
+    }
+
+    /**
+     * Update user information. Only the authenticated user can update their own information
+     * 
+     * @param field the field to be updated
+     * @param value the new value for the particular field
+     *
+     * @return User id
+     */
+
+    public function updateUserInfo(Request $request)
+    {
+
+        $update = Auth::user()->update([$request->field => $request->value]);
+        return $update;
+    }
+
+
+
+    /**
+     * Update user's. Only the authenticated user can update their own avatar.
+     * The will be no need for updates via a dashboard by an admin user
+     * 
+     * @param image the new avatar
+     *
+     * @return User id
+     */
+    public function updateUserAvatar(Request $request)
+    {
+
+        if ($request->hasFile('image')) {
+
+            $request->validate([
+                'id' => 'required',
+                'image' => 'required|file|mimes:jpeg,png|max:10000',
+            ]);
+
+            $user = Auth::user();
+            // Create a file name to store the avatar
+            $file_name = strtolower($user->name) . '_' . $user->id;
+            $extension = $request->file('image')->extension();
+            $path = $request->file('image')->storePubliclyAs('user_avatar', $file_name . '.' . $extension, 's3');
+
+            $update = $user->update(['avatar_path' => $path]);
+
+            return $update;
+        }
     }
 }
