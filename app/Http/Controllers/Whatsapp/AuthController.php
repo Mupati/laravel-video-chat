@@ -81,6 +81,9 @@ class AuthController extends Controller
         $user->update([
             'last_login_at' => now()->toDateTimeString(),
         ]);
+
+        // This deletes all login tokens.
+        // This means the user will be logged out of all devices they have logged in
         $user->tokens()->delete();
 
         Log::info('type: Logout, user:' . Auth::user()->email . ', datetime:' . now()->toDateTimeString());
@@ -105,6 +108,12 @@ class AuthController extends Controller
 
     // Fetch the users that have contacted the authenticated user and the number of unread messages.
     // Add the last message sent or received as well.
+    // Fetch messages in order of the last message in the db by the created_at field
+
+    // Because we are using raw queries, we can't get the avatar_url from the avatar_path using the getAvatarUrlAttribute()
+    // We will compute the avatar_url on the frontend
+
+    // Maybe you might want to convert this query to eloquent
     public function fetchContactedUsers()
     {
         $authUser = Auth::id();
@@ -123,11 +132,11 @@ class AuthController extends Controller
                 GROUP BY u.id, u.name) AS r1
             ON wm1.id = r1.latest_message_id) AS mr
         JOIN
-            (SELECT u.id, u.name, u.email, u.last_login_at, COUNT(CASE WHEN wm.receiver = '$authUser' AND wm.is_read = FALSE THEN 1 END) AS unread_count 
+            (SELECT u.id, u.name, u.email, u.last_login_at, u.avatar_path, COUNT(CASE WHEN wm.receiver = '$authUser' AND wm.is_read = FALSE THEN 1 END) AS unread_count 
             FROM users u 
             JOIN wossop_messages wm
                 ON (u.id = wm.receiver AND wm.sender = '$authUser') OR (u.id = wm.sender AND wm.receiver = '$authUser')
-            GROUP BY u.id, u.name, u.email, u.last_login_at) AS mr2
+            GROUP BY u.id, u.name, u.email, u.last_login_at, u.avatar_path) AS mr2
         ON mr.id = mr2.id
         ORDER BY mr.latest_message_id DESC;
         "));
@@ -152,14 +161,14 @@ class AuthController extends Controller
 
 
     /**
-     * Update user's. Only the authenticated user can update their own avatar.
+     * Update user's dp. Only the authenticated user can update their own avatar.
      * The will be no need for updates via a dashboard by an admin user
      * 
      * @param image the new avatar
      *
      * @return User id
      */
-    public function updateUserAvatar(Request $request)
+    public function updateUserDp(Request $request)
     {
 
         if ($request->hasFile('image')) {
@@ -171,7 +180,7 @@ class AuthController extends Controller
 
             $user = Auth::user();
             // Create a file name to store the avatar
-            $file_name = strtolower($user->name) . '_' . $user->id;
+            $file_name =  strtolower(explode(" ", $user->name)[0]) . '_' . $user->id . '_dp';
             $extension = $request->file('image')->extension();
             $path = $request->file('image')->storePubliclyAs('user_avatar', $file_name . '.' . $extension, 's3');
 

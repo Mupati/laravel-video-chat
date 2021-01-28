@@ -21,6 +21,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/users', 'App\Http\Controllers\Whatsapp\AuthController@fetchAllUsers');
     Route::get('/contacted-users', 'App\Http\Controllers\Whatsapp\AuthController@fetchContactedUsers');
 
+    // Info Updates
+    Route::post('/update-info', 'App\Http\Controllers\Whatsapp\AuthController@updateUserInfo');
+
+    // Avatar Update
+    Route::post('/update-dp', 'App\Http\Controllers\Whatsapp\AuthController@updateUserDp');
 
     // Messaging Endpoints
     Route::post('/message', 'App\Http\Controllers\Whatsapp\WossopMessageController@sendMessage');
