@@ -31,3 +31,7 @@ Broadcast::channel('wossop-channel', function ($user) {
 Broadcast::channel('agora-online-channel', function ($user) {
     return ['id' => $user->id, 'name' => $user->name];
 });
+
+Broadcast::channel('private-chat-channel.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

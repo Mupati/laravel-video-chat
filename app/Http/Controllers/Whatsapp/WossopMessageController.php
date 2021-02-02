@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Whatsapp;
 
 use App\Http\Controllers\Controller;
 use App\Events\SendWossopMessage;
+use App\Events\SendPrivateWossopMessage;
 use App\Models\WossopMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,7 +32,9 @@ class WossopMessageController extends Controller
 
         $new_message->save();
 
-        event(new SendWossopMessage($new_message));
+        // event(new SendWossopMessage($new_message));
+
+        event(new SendPrivateWossopMessage(($new_message)));
     }
 
 

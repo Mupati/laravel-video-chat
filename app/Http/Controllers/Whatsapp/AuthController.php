@@ -119,7 +119,7 @@ class AuthController extends Controller
         $authUser = Auth::id();
 
 
-        return  DB::select(DB::raw("
+        return DB::select(DB::raw("
         SELECT mr2.*, mr.message, mr.created_at 
         FROM 
             (SELECT r1.id, r1.latest_message_id, wm1.message, wm1.created_at 
@@ -140,6 +140,50 @@ class AuthController extends Controller
         ON mr.id = mr2.id
         ORDER BY mr.latest_message_id DESC;
         "));
+
+
+        // An attempt to implement this same query in Eloquent -- Failed Terribly
+        // Got stuck at the point where I have to select the results from 2 subqueries
+
+        // $users_and_counts = User::selectRaw("users.id, users.name, users.email, users.last_login_at, users.avatar_path, COUNT(CASE WHEN wossop_messages.receiver = '$authUser' AND wossop_messages.is_read = FALSE THEN 1 END) AS unread_count")
+        //     ->join('wossop_messages', function ($join) use ($authUser) {
+        //         $join->on('users.id', '=', 'wossop_messages.receiver')->where('wossop_messages.sender', $authUser)
+        //             ->orOn('users.id', '=', 'wossop_messages.sender')->where('wossop_messages.receiver', $authUser);
+        //     })
+        //     ->groupBy('users.id', 'users.name', 'users.email', 'users.last_login_at', 'users.avatar_path');
+        // // ->get();
+
+        // $users_latest_message = User::selectRaw('users.id, users.name, MAX(wossop_messages.id) latest_message_id')
+        //     ->join('wossop_messages', function ($join) use ($authUser) {
+        //         $join->on('users.id', '=', 'wossop_messages.receiver')->where('wossop_messages.sender', $authUser)
+        //             ->orOn('users.id', '=', 'wossop_messages.sender')->where('wossop_messages.receiver', $authUser);
+        //     })
+        //     ->groupBy('users.id', 'users.name');
+        // // ->get();
+
+
+
+        // $koc = WossopMessage::joinSub(
+        //     "
+        //     SELECT users.id, users.name, MAX(wossop_messages.id) latest_message_id
+        //         FROM users 
+        //         JOIN wossop_messages
+        //             ON (users.id = wossop_messages.receiver AND wossop_messages.sender = '$authUser') OR (users.id = wossop_messages.sender AND wossop_messages.receiver = '$authUser')
+        //         GROUP BY users.id, users.name",
+        //     'r1',
+        //     'wossop_messages.id',
+        //     '=',
+        //     'r1.latest_message_id'
+        // )->selectRaw("r1.id, r1.latest_message_id, wossop_messages.message, wossop_messages.created_at")->get();
+
+
+        // $topTop =  WossopMessage::selectRaw("r1.id, r1.latest_message_id, wossop_messages.message, wossop_messages.created_at")
+        //     ->joinSub($users_latest_message, 'r1', function ($join) {
+        //         $join->on('wossop_messages.id', '=', 'r1.latest_message_id');
+        //     });
+        // // ->get();
+
+
     }
 
     /**
