@@ -100,7 +100,7 @@ class AuthController extends Controller
         return Auth::user();
     }
 
-    // fetch all users apart fromt the authenticated user
+    // fetch all users apart from the authenticated user
     public function fetchAllUsers()
     {
         return User::where('id', '!=', Auth::id())->get();
