@@ -2309,6 +2309,232 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 /***/ }),
 
+/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Broadcaster.vue?vue&type=script&lang=js&":
+/*!**********************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/Broadcaster.vue?vue&type=script&lang=js& ***!
+  \**********************************************************************************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/regenerator */ "./node_modules/@babel/runtime/regenerator/index.js");
+/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var simple_peer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
+/* harmony import */ var simple_peer__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(simple_peer__WEBPACK_IMPORTED_MODULE_1__);
+
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: "Broadcaster",
+  props: ["auth_user_id", "env", "turn_url", "turn_username", "turn_credential"],
+  data: function data() {
+    return {
+      isVisibleLink: false,
+      streamingPresenceChannel: null,
+      streamingUsers: [],
+      currentlyContactedUser: null,
+      allPeers: {} // this will hold all dynamically created peers using the 'ID' of users who just joined as keys
+
+    };
+  },
+  computed: {
+    streamId: function streamId() {
+      // you can improve streamId generation code. As long as we include the
+      // broadcaster's user id, we are assured of getting unique streamiing link everytime.
+      // the current code just generates a fixed streaming link for a particular user.
+      return "".concat(this.auth_user_id, "12acde2");
+    },
+    streamLink: function streamLink() {
+      // just a quick fix. can be improved by setting the app_url
+      if (this.env === "production") {
+        return "https://laravel-video-call.herokuapp.com/streaming/".concat(this.streamId);
+      } else {
+        return "http://127.0.0.1:8000/streaming/".concat(this.streamId);
+      }
+    }
+  },
+  methods: {
+    startStream: function startStream() {
+      var _this = this;
+
+      return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee() {
+        var stream;
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.next = 2;
+                return navigator.mediaDevices.getUserMedia({
+                  video: true
+                });
+
+              case 2:
+                stream = _context.sent;
+                _this.$refs.broadcaster.srcObject = stream;
+
+                _this.initializeStreamingChannel();
+
+                _this.isVisibleLink = true;
+
+              case 6:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee);
+      }))();
+    },
+    peerCreator: function peerCreator(stream) {
+      var _this2 = this;
+
+      var peer;
+      var offer;
+      return {
+        create: function create() {
+          peer = new simple_peer__WEBPACK_IMPORTED_MODULE_1___default.a({
+            initiator: true,
+            trickle: false,
+            stream: stream,
+            config: {
+              iceServers: [{
+                urls: "stun:stun.stunprotocol.org"
+              }, {
+                urls: _this2.turn_url,
+                username: _this2.turn_username,
+                credential: _this2.turn_credential
+              }]
+            }
+          });
+        },
+        getPeer: function getPeer() {
+          return peer;
+        },
+        initEvents: function initEvents() {
+          peer.on("signal", function (data) {
+            offer = data; // send offer over here. Better than the 5 seconds delay used in the streaming presence channel
+          });
+          peer.on("stream", function (stream) {
+            console.log("onStream");
+          });
+          peer.on("track", function (track, stream) {
+            console.log("onTrack");
+          });
+          peer.on("connect", function () {
+            console.log("Broadcaster Peer connected");
+          });
+          peer.on("close", function () {
+            console.log("Broadcaster Peer closed");
+          });
+          peer.on("error", function (err) {
+            console.log("handle error gracefully");
+          });
+        },
+        getOffer: function getOffer() {
+          return offer;
+        }
+      };
+    },
+    initializeStreamingChannel: function initializeStreamingChannel() {
+      var _this3 = this;
+
+      this.streamingPresenceChannel = window.Echo.join("streaming-channel.".concat(this.streamId));
+      this.streamingPresenceChannel.here(function (users) {
+        _this3.streamingUsers = users;
+      });
+      this.streamingPresenceChannel.joining(function (user) {
+        console.log("New User", user); // if this new user is not already on the call, send your stream offer
+
+        var joiningUserIndex = _this3.streamingUsers.findIndex(function (data) {
+          return data.id === user.id;
+        });
+
+        if (joiningUserIndex < 0) {
+          _this3.streamingUsers.push(user); // A new user just joined the channel so signal that user
+
+
+          _this3.currentlyContactedUser = user.id;
+
+          _this3.$set(_this3.allPeers, "".concat(user.id), _this3.peerCreator(_this3.$refs.broadcaster.srcObject)); // Create Peer
+
+
+          _this3.allPeers[user.id].create(); // Initialize Events
+
+
+          _this3.allPeers[user.id].initEvents(); // allow 5 seconds before you send offer request.
+          // offer will be ready by then
+          // feels like there is a better way to go about this. if you see this, suggest a better way in a PR
+          // maybe pass
+
+
+          setTimeout(function () {
+            axios.post("/stream-offer", {
+              // The broadcaster is the first to join the channel
+              broadcaster: _this3.streamingUsers[0],
+              receiver: user,
+              offer: _this3.allPeers[user.id].getOffer(),
+              streamId: _this3.streamId
+            }).then(function (res) {
+              console.log(res);
+            })["catch"](function (err) {
+              console.log(err);
+            });
+          }, 5000);
+        }
+      });
+      this.streamingPresenceChannel.leaving(function (user) {
+        console.log("Leaving: ", user);
+      });
+      this.streamingPresenceChannel.listen("StreamAnswer", function (_ref) {
+        var data = _ref.data;
+        console.log("answer", data); // edit the received signal and signal broadcaster
+        // ++ Broadcaster should signal viewer with the answer based on the
+        // user id  that comes with the viewer signal
+
+        if (data.answer.renegotiate) {
+          console.log("renegotating");
+        }
+
+        if (data.answer.sdp) {
+          var updatedSignal = _objectSpread(_objectSpread({}, data.answer), {}, {
+            sdp: "".concat(data.answer.sdp, "\n")
+          });
+
+          _this3.allPeers[_this3.currentlyContactedUser].getPeer().signal(updatedSignal);
+        }
+      });
+    }
+  }
+});
+
+/***/ }),
+
 /***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ExampleComponent.vue?vue&type=script&lang=js&":
 /*!***************************************************************************************************************************************************************************!*\
   !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ExampleComponent.vue?vue&type=script&lang=js& ***!
@@ -2802,6 +3028,126 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       setTimeout(function () {
         _this6.callPlaced = false;
       }, 3000);
+    }
+  }
+});
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Viewer.vue?vue&type=script&lang=js&":
+/*!*****************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib??ref--4-0!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/Viewer.vue?vue&type=script&lang=js& ***!
+  \*****************************************************************************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var simple_peer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! simple-peer */ "./node_modules/simple-peer/index.js");
+/* harmony import */ var simple_peer__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(simple_peer__WEBPACK_IMPORTED_MODULE_0__);
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  name: "Viewer",
+  props: ["auth_user_id", "stream_id", "turn_url", "turn_username", "turn_credential"],
+  data: function data() {
+    return {
+      streamingPresenceChannel: null
+    };
+  },
+  methods: {
+    joinBroadcast: function joinBroadcast() {
+      this.initializeStreamingChannel();
+    },
+    initializeStreamingChannel: function initializeStreamingChannel() {
+      var _this = this;
+
+      this.streamingPresenceChannel = window.Echo.join("streaming-channel.".concat(this.stream_id));
+      this.streamingPresenceChannel.leaving(function (user) {
+        console.log("Leaving: ", user);
+      });
+      this.streamingPresenceChannel.listen("StreamOffer", function (_ref) {
+        var data = _ref.data;
+        console.log("offer data: ", data); // check whether you are the intended receipient of the offer
+
+        if (data.receiver.id === _this.auth_user_id) {
+          _this.createViewerPeer(data.offer);
+        }
+      });
+    },
+    createViewerPeer: function createViewerPeer(incomingOffer) {
+      var peer = new simple_peer__WEBPACK_IMPORTED_MODULE_0___default.a({
+        initiator: false,
+        trickle: false,
+        config: {
+          iceServers: [{
+            urls: "stun:stun.stunprotocol.org"
+          }, {
+            urls: this.turn_url,
+            username: this.turn_username,
+            credential: this.turn_credential
+          }]
+        }
+      });
+      peer.addTransceiver("video", {
+        direction: "recvonly"
+      });
+      this.handlePeerEvents(peer, incomingOffer);
+    },
+    handlePeerEvents: function handlePeerEvents(peer, incomingOffer) {
+      var _this2 = this;
+
+      peer.on("signal", function (data) {
+        axios.post("/stream-answer", {
+          answer: data,
+          streamId: _this2.stream_id
+        }).then(function (res) {
+          console.log(res);
+        })["catch"](function (err) {
+          console.log(err);
+        });
+      });
+      peer.on("stream", function (stream) {
+        // display remote stream
+        _this2.$refs.viewer.srcObject = stream;
+      });
+      peer.on("track", function (track, stream) {
+        console.log("onTrack");
+      });
+      peer.on("connect", function () {
+        console.log("Viewer Peer connected");
+      });
+      peer.on("close", function () {
+        console.log("Viewer Peer closed");
+      });
+      peer.on("error", function (err) {
+        console.log("handle error gracefully");
+      });
+
+      var updatedOffer = _objectSpread(_objectSpread({}, incomingOffer), {}, {
+        sdp: "".concat(incomingOffer.sdp, "\n")
+      });
+
+      peer.signal(updatedOffer);
     }
   }
 });
@@ -54333,6 +54679,53 @@ render._withStripped = true
 
 /***/ }),
 
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Broadcaster.vue?vue&type=template&id=5f697d13&scoped=true&":
+/*!**************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/Broadcaster.vue?vue&type=template&id=5f697d13&scoped=true& ***!
+  \**************************************************************************************************************************************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container" }, [
+    _c("div", { staticClass: "row" }, [
+      _c("div", { staticClass: "col-md-8 offset-md-2" }, [
+        _c(
+          "button",
+          { staticClass: "btn btn-success", on: { click: _vm.startStream } },
+          [_vm._v("\n        Start Stream")]
+        ),
+        _c("br"),
+        _vm._v(" "),
+        _vm.isVisibleLink
+          ? _c("p", { staticClass: "my-5" }, [
+              _vm._v(
+                "\n        Share the following streaming link: " +
+                  _vm._s(_vm.streamLink) +
+                  "\n      "
+              )
+            ])
+          : _vm._e(),
+        _vm._v(" "),
+        _c("video", { ref: "broadcaster", attrs: { autoplay: "" } })
+      ])
+    ])
+  ])
+}
+var staticRenderFns = []
+render._withStripped = true
+
+
+
+/***/ }),
+
 /***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/ExampleComponent.vue?vue&type=template&id=299e239e&":
 /*!*******************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/ExampleComponent.vue?vue&type=template&id=299e239e& ***!
@@ -54559,6 +54952,43 @@ var render = function() {
             ])
           ])
         : _vm._e()
+    ])
+  ])
+}
+var staticRenderFns = []
+render._withStripped = true
+
+
+
+/***/ }),
+
+/***/ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Viewer.vue?vue&type=template&id=2a0f873d&scoped=true&":
+/*!*********************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/components/Viewer.vue?vue&type=template&id=2a0f873d&scoped=true& ***!
+  \*********************************************************************************************************************************************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "render", function() { return render; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return staticRenderFns; });
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c("div", { staticClass: "container" }, [
+    _c("div", { staticClass: "row" }, [
+      _c("div", { staticClass: "col-md-8 offset-md-2" }, [
+        _c(
+          "button",
+          { staticClass: "btn btn-success", on: { click: _vm.joinBroadcast } },
+          [_vm._v("\n        Join Stream")]
+        ),
+        _c("br"),
+        _vm._v(" "),
+        _c("video", { ref: "viewer", attrs: { autoplay: "" } })
+      ])
     ])
   ])
 }
@@ -66758,7 +67188,10 @@ window.Vue = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.common.
 
 Vue.component("example-component", __webpack_require__(/*! ./components/ExampleComponent.vue */ "./resources/js/components/ExampleComponent.vue")["default"]);
 Vue.component("video-chat", __webpack_require__(/*! ./components/VideoChat.vue */ "./resources/js/components/VideoChat.vue")["default"]);
-Vue.component("agora-chat", __webpack_require__(/*! ./components/AgoraChat.vue */ "./resources/js/components/AgoraChat.vue")["default"]);
+Vue.component("agora-chat", __webpack_require__(/*! ./components/AgoraChat.vue */ "./resources/js/components/AgoraChat.vue")["default"]); //  Streaming Components
+
+Vue.component("broadcaster", __webpack_require__(/*! ./components/Broadcaster.vue */ "./resources/js/components/Broadcaster.vue")["default"]);
+Vue.component("viewer", __webpack_require__(/*! ./components/Viewer.vue */ "./resources/js/components/Viewer.vue")["default"]);
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application
@@ -66902,6 +67335,75 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_template_id_f5a5b2d6_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_AgoraChat_vue_vue_type_template_id_f5a5b2d6_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+
+
+
+/***/ }),
+
+/***/ "./resources/js/components/Broadcaster.vue":
+/*!*************************************************!*\
+  !*** ./resources/js/components/Broadcaster.vue ***!
+  \*************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _Broadcaster_vue_vue_type_template_id_5f697d13_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Broadcaster.vue?vue&type=template&id=5f697d13&scoped=true& */ "./resources/js/components/Broadcaster.vue?vue&type=template&id=5f697d13&scoped=true&");
+/* harmony import */ var _Broadcaster_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Broadcaster.vue?vue&type=script&lang=js& */ "./resources/js/components/Broadcaster.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport *//* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+
+
+
+
+
+/* normalize component */
+
+var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__["default"])(
+  _Broadcaster_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
+  _Broadcaster_vue_vue_type_template_id_5f697d13_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _Broadcaster_vue_vue_type_template_id_5f697d13_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  false,
+  null,
+  "5f697d13",
+  null
+  
+)
+
+/* hot reload */
+if (false) { var api; }
+component.options.__file = "resources/js/components/Broadcaster.vue"
+/* harmony default export */ __webpack_exports__["default"] = (component.exports);
+
+/***/ }),
+
+/***/ "./resources/js/components/Broadcaster.vue?vue&type=script&lang=js&":
+/*!**************************************************************************!*\
+  !*** ./resources/js/components/Broadcaster.vue?vue&type=script&lang=js& ***!
+  \**************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_Broadcaster_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./Broadcaster.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Broadcaster.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_Broadcaster_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
+
+/***/ }),
+
+/***/ "./resources/js/components/Broadcaster.vue?vue&type=template&id=5f697d13&scoped=true&":
+/*!********************************************************************************************!*\
+  !*** ./resources/js/components/Broadcaster.vue?vue&type=template&id=5f697d13&scoped=true& ***!
+  \********************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Broadcaster_vue_vue_type_template_id_5f697d13_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./Broadcaster.vue?vue&type=template&id=5f697d13&scoped=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Broadcaster.vue?vue&type=template&id=5f697d13&scoped=true&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Broadcaster_vue_vue_type_template_id_5f697d13_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Broadcaster_vue_vue_type_template_id_5f697d13_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 
@@ -67058,6 +67560,75 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_VideoChat_vue_vue_type_template_id_737f9f18_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_VideoChat_vue_vue_type_template_id_737f9f18_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
+
+
+
+/***/ }),
+
+/***/ "./resources/js/components/Viewer.vue":
+/*!********************************************!*\
+  !*** ./resources/js/components/Viewer.vue ***!
+  \********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _Viewer_vue_vue_type_template_id_2a0f873d_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Viewer.vue?vue&type=template&id=2a0f873d&scoped=true& */ "./resources/js/components/Viewer.vue?vue&type=template&id=2a0f873d&scoped=true&");
+/* harmony import */ var _Viewer_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Viewer.vue?vue&type=script&lang=js& */ "./resources/js/components/Viewer.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport *//* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
+
+
+
+
+
+/* normalize component */
+
+var component = Object(_node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_2__["default"])(
+  _Viewer_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__["default"],
+  _Viewer_vue_vue_type_template_id_2a0f873d_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"],
+  _Viewer_vue_vue_type_template_id_2a0f873d_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"],
+  false,
+  null,
+  "2a0f873d",
+  null
+  
+)
+
+/* hot reload */
+if (false) { var api; }
+component.options.__file = "resources/js/components/Viewer.vue"
+/* harmony default export */ __webpack_exports__["default"] = (component.exports);
+
+/***/ }),
+
+/***/ "./resources/js/components/Viewer.vue?vue&type=script&lang=js&":
+/*!*********************************************************************!*\
+  !*** ./resources/js/components/Viewer.vue?vue&type=script&lang=js& ***!
+  \*********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_Viewer_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib??ref--4-0!../../../node_modules/vue-loader/lib??vue-loader-options!./Viewer.vue?vue&type=script&lang=js& */ "./node_modules/babel-loader/lib/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Viewer.vue?vue&type=script&lang=js&");
+/* empty/unused harmony star reexport */ /* harmony default export */ __webpack_exports__["default"] = (_node_modules_babel_loader_lib_index_js_ref_4_0_node_modules_vue_loader_lib_index_js_vue_loader_options_Viewer_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_0__["default"]); 
+
+/***/ }),
+
+/***/ "./resources/js/components/Viewer.vue?vue&type=template&id=2a0f873d&scoped=true&":
+/*!***************************************************************************************!*\
+  !*** ./resources/js/components/Viewer.vue?vue&type=template&id=2a0f873d&scoped=true& ***!
+  \***************************************************************************************/
+/*! exports provided: render, staticRenderFns */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Viewer_vue_vue_type_template_id_2a0f873d_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!../../../node_modules/vue-loader/lib??vue-loader-options!./Viewer.vue?vue&type=template&id=2a0f873d&scoped=true& */ "./node_modules/vue-loader/lib/loaders/templateLoader.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/components/Viewer.vue?vue&type=template&id=2a0f873d&scoped=true&");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "render", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Viewer_vue_vue_type_template_id_2a0f873d_scoped_true___WEBPACK_IMPORTED_MODULE_0__["render"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_Viewer_vue_vue_type_template_id_2a0f873d_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
 

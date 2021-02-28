@@ -38,6 +38,14 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/agora-chat', 'App\Http\Controllers\AgoraVideoController@index');
     Route::post('/agora/token', 'App\Http\Controllers\AgoraVideoController@token');
     Route::post('/agora/call-user', 'App\Http\Controllers\AgoraVideoController@callUser');
+
+
+    // WebRTC Group Call Endpoints
+    // Initiate Call, Get a shareable broadcast link
+    Route::get('/streaming', 'App\Http\Controllers\WebrtcStreamingController@index');
+    Route::get('/streaming/{streamId}', 'App\Http\Controllers\WebrtcStreamingController@consumer');
+    Route::post('/stream-offer', 'App\Http\Controllers\WebrtcStreamingController@makeStreamOffer');
+    Route::post('/stream-answer', 'App\Http\Controllers\WebrtcStreamingController@makeStreamAnswer');
 });
 
 /**

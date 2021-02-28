@@ -10,3 +10,9 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+
+# duplicate files I don't want to track
+resources/js/components/BroadcasterCorrect.vue
+resources/js/components/BroadcasterOld.vue
+resources/js/components/ViewerCorrect.vue
+resources/js/components/ViewerOld.vue
