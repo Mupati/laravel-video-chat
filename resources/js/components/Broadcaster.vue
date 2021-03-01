@@ -57,16 +57,17 @@ export default {
     async startStream() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
+        audio: true,
       });
       this.$refs.broadcaster.srcObject = stream;
 
       this.initializeStreamingChannel();
+      this.initializeSignalAnswerChannel(); // a private channel where the broadcaster listens to incoming signalling answer
       this.isVisibleLink = true;
     },
 
-    peerCreator(stream) {
+    peerCreator(stream, user, signalCallback) {
       let peer;
-      let offer;
       return {
         create: () => {
           peer = new Peer({
@@ -92,8 +93,8 @@ export default {
 
         initEvents: () => {
           peer.on("signal", (data) => {
-            offer = data;
-            // send offer over here. Better than the 5 seconds delay used in the streaming presence channel
+            // send offer over here.
+            signalCallback(data, user);
           });
 
           peer.on("stream", (stream) => {
@@ -116,8 +117,6 @@ export default {
             console.log("handle error gracefully");
           });
         },
-
-        getOffer: () => offer,
       };
     },
 
@@ -145,65 +144,61 @@ export default {
           this.$set(
             this.allPeers,
             `${user.id}`,
-            this.peerCreator(this.$refs.broadcaster.srcObject)
+            this.peerCreator(
+              this.$refs.broadcaster.srcObject,
+              user,
+              this.signalCallback
+            )
           );
           // Create Peer
           this.allPeers[user.id].create();
 
           // Initialize Events
           this.allPeers[user.id].initEvents();
-
-          // allow 5 seconds before you send offer request.
-          // offer will be ready by then
-          // feels like there is a better way to go about this. if you see this, suggest a better way in a PR
-
-          // maybe pass
-
-          console.log("about to send a stream offer");
-          setTimeout(() => {
-            axios
-              .post("/stream-offer", {
-                // The broadcaster is the first to join the channel
-                broadcaster: this.streamingUsers[0],
-                receiver: user,
-                offer: this.allPeers[user.id].getOffer(),
-                streamId: this.streamId,
-              })
-              .then((res) => {
-                console.log(res);
-              })
-              .catch((err) => {
-                console.log(err);
-              });
-          }, 5000);
         }
       });
 
       this.streamingPresenceChannel.leaving((user) => {
-        console.log("Leaving: ", user);
+        console.log(user.name, "Left");
       });
+    },
 
-      this.streamingPresenceChannel.listen("StreamAnswer", ({ data }) => {
-        console.log("answer", data);
+    initializeSignalAnswerChannel() {
+      window.Echo.private(`stream-signal-channel.${this.auth_user_id}`).listen(
+        "StreamAnswer",
+        ({ data }) => {
+          console.log("Signal Answer from private channel");
 
-        // edit the received signal and signal broadcaster
-        // ++ Broadcaster should signal viewer with the answer based on the
-        // user id  that comes with the viewer signal
+          if (data.answer.renegotiate) {
+            console.log("renegotating");
+          }
+          if (data.answer.sdp) {
+            const updatedSignal = {
+              ...data.answer,
+              sdp: `${data.answer.sdp}\n`,
+            };
 
-        if (data.answer.renegotiate) {
-          console.log("renegotating");
+            this.allPeers[this.currentlyContactedUser]
+              .getPeer()
+              .signal(updatedSignal);
+          }
         }
-        if (data.answer.sdp) {
-          const updatedSignal = {
-            ...data.answer,
-            sdp: `${data.answer.sdp}\n`,
-          };
+      );
+    },
 
-          this.allPeers[this.currentlyContactedUser]
-            .getPeer()
-            .signal(updatedSignal);
-        }
-      });
+    signalCallback(offer, user) {
+      axios
+        .post("/stream-offer", {
+          broadcaster: this.auth_user_id,
+          receiver: user,
+          offer,
+        })
+        .then((res) => {
+          console.log(res);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     },
   },
 };

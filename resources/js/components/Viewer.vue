@@ -32,27 +32,16 @@ export default {
   methods: {
     joinBroadcast() {
       this.initializeStreamingChannel();
+      this.initializeSignalOfferChannel(); // a private channel where the viewer listens to incoming signalling offer
     },
 
     initializeStreamingChannel() {
       this.streamingPresenceChannel = window.Echo.join(
         `streaming-channel.${this.stream_id}`
       );
-
-      this.streamingPresenceChannel.leaving((user) => {
-        console.log("Leaving: ", user);
-      });
-
-      this.streamingPresenceChannel.listen("StreamOffer", ({ data }) => {
-        console.log("offer data: ", data);
-        // check whether you are the intended receipient of the offer
-        if (data.receiver.id === this.auth_user_id) {
-          this.createViewerPeer(data.offer);
-        }
-      });
     },
 
-    createViewerPeer(incomingOffer) {
+    createViewerPeer(incomingOffer, broadcaster) {
       const peer = new Peer({
         initiator: false,
         trickle: false,
@@ -70,16 +59,20 @@ export default {
         },
       });
 
+      // Add Transceivers
       peer.addTransceiver("video", { direction: "recvonly" });
-      this.handlePeerEvents(peer, incomingOffer);
+      peer.addTransceiver("audio", { direction: "recvonly" });
+
+      // Initialize Peer events for connection to remote peer
+      this.handlePeerEvents(peer, incomingOffer, broadcaster);
     },
 
-    handlePeerEvents(peer, incomingOffer) {
+    handlePeerEvents(peer, incomingOffer, broadcaster) {
       peer.on("signal", (data) => {
         axios
           .post("/stream-answer", {
+            broadcaster,
             answer: data,
-            streamId: this.stream_id,
           })
           .then((res) => {
             console.log(res);
@@ -115,6 +108,16 @@ export default {
         sdp: `${incomingOffer.sdp}\n`,
       };
       peer.signal(updatedOffer);
+    },
+
+    initializeSignalOfferChannel() {
+      window.Echo.private(`stream-signal-channel.${this.auth_user_id}`).listen(
+        "StreamOffer",
+        ({ data }) => {
+          console.log("Signal Offer from private channel");
+          this.createViewerPeer(data.offer, data.broadcaster);
+        }
+      );
     },
   },
 };

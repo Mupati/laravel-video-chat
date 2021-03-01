@@ -5,10 +5,11 @@ namespace App\Events;
 // use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
-// use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class StreamOffer implements ShouldBroadcast
 {
@@ -32,6 +33,7 @@ class StreamOffer implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PresenceChannel('streaming-channel.' . $this->data['streamId']);
+        // stream offer can broadcast on a private channel
+        return  new PrivateChannel('stream-signal-channel.' . $this->data['receiver']['id']);
     }
 }
