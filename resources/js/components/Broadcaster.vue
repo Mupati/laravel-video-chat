@@ -160,6 +160,22 @@ export default {
 
       this.streamingPresenceChannel.leaving((user) => {
         console.log(user.name, "Left");
+        // destroy peer
+        this.allPeers[user.id].getPeer().destroy();
+
+        // delete peer object
+        delete this.allPeers[user.id];
+
+        // if one leaving is the broadcaster set streamingUsers to empty array
+        if (user.id === this.auth_user_id) {
+          this.streamingUsers = [];
+        } else {
+          // remove from streamingUsers array
+          const leavingUserIndex = this.streamingUsers.findIndex(
+            (data) => data.id === user.id
+          );
+          this.streamingUsers.splice(leavingUserIndex, 1);
+        }
       });
     },
 

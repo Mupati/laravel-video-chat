@@ -26,6 +26,8 @@ export default {
   data() {
     return {
       streamingPresenceChannel: null,
+      broadcasterPeer: null,
+      broadcasterId: null,
     };
   },
 
@@ -64,10 +66,17 @@ export default {
       peer.addTransceiver("audio", { direction: "recvonly" });
 
       // Initialize Peer events for connection to remote peer
-      this.handlePeerEvents(peer, incomingOffer, broadcaster);
+      this.handlePeerEvents(
+        peer,
+        incomingOffer,
+        broadcaster,
+        this.removeBroadcastVideo
+      );
+
+      this.broadcasterPeer = peer;
     },
 
-    handlePeerEvents(peer, incomingOffer, broadcaster) {
+    handlePeerEvents(peer, incomingOffer, broadcaster, cleanupCallback) {
       peer.on("signal", (data) => {
         axios
           .post("/stream-answer", {
@@ -97,6 +106,8 @@ export default {
 
       peer.on("close", () => {
         console.log("Viewer Peer closed");
+        peer.destroy();
+        cleanupCallback();
       });
 
       peer.on("error", (err) => {
@@ -115,13 +126,24 @@ export default {
         "StreamOffer",
         ({ data }) => {
           console.log("Signal Offer from private channel");
+          this.broadcasterId = data.broadcaster;
           this.createViewerPeer(data.offer, data.broadcaster);
         }
       );
+    },
+
+    removeBroadcastVideo() {
+      console.log("removingBroadcast Video");
+      alert("Livestream ended by broadcaster");
+      const tracks = this.$refs.viewer.srcObject.getTracks();
+      tracks.forEach((track) => {
+        track.stop();
+      });
+      this.$refs.viewer.srcObject = null;
     },
   },
 };
 </script>
 
 <style scoped>
-</style>
+</style>   
