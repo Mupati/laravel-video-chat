@@ -16,6 +16,7 @@
 
 <script>
 import Peer from "simple-peer";
+import { getPermissions } from "../helpers";
 export default {
   name: "Broadcaster",
   props: [
@@ -55,10 +56,12 @@ export default {
 
   methods: {
     async startStream() {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+      // const stream = await navigator.mediaDevices.getUserMedia({
+      //   video: true,
+      //   audio: true,
+      // });
+      // microphone and camera permissions
+      const stream = await getPermissions();
       this.$refs.broadcaster.srcObject = stream;
 
       this.initializeStreamingChannel();

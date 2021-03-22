@@ -41,7 +41,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
     // WebRTC Group Call Endpoints
-    // Initiate Call, Get a shareable broadcast link
+    // Initiate Stream, Get a shareable broadcast link
     Route::get('/streaming', 'App\Http\Controllers\WebrtcStreamingController@index');
     Route::get('/streaming/{streamId}', 'App\Http\Controllers\WebrtcStreamingController@consumer');
     Route::post('/stream-offer', 'App\Http\Controllers\WebrtcStreamingController@makeStreamOffer');
