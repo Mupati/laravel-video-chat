@@ -1,4 +1,11 @@
-# Video Chat Application With Laravel
+# A Collection of Laravel Projects
+
+This repository contains a collection of applications built with Laravel.<br/>
+At the moment I've been hacking around WebRTC so most of the applications are about WebRTC.<br/>
+Most of them are demo applications for various Technical Articles I've written and going to
+write on [Dev.to](https://dev.to/mupati) and [Medium](https://mupati.medium.com).
+
+There are endpoints for some other applications I've built as well.
 
 ## Project Setup
 
@@ -17,19 +24,44 @@
 ## Running the Application
 
 1. `php artisan serve` to start the server and `npm run start` to start the frontend.
-2. Create some users using the register page.
-3. Log in with the users you created.
-4. Click the link that takes you to the video chat page for both logged in users
-5. Call a user which is indicated online and receive from the  other.
+2. Note that the register endpoint has been removed to prevent people from creating <br/> 
+   a lot of users when they want to try out the online demo. In your local copy you can enable it in the `routes/web.php` file.
 
 
-## Testing Video Call
+## Available Applications
+The following are the available applications and the links to the article I've written about it if available:
+
+
+1. **Custom WebRTC Applications**
+   * **Live stream with WebRTC in your Laravel application**<br/>
+     A Live streaming application built with WebRTC using the simple-peer.js package<br/>
+     [Medium Link](https://mupati.medium.com/live-stream-with-webrtc-in-your-laravel-application-b6ecc13d8509)<br/>
+     [Dev.to Link](https://dev.to/mupati/live-stream-with-webrtc-in-your-laravel-application-2kl3)
+
+   * **Adding Video Chat To Your Laravel App**<br/>
+     This is one-on-one video call application with WebRTC using the simple-peer.js package<br/>
+     [Medium Link](https://mupati.medium.com/adding-video-chat-to-your-laravel-app-9e333c8a01f3)<br/>
+     [Dev.to Link](https://dev.to/mupati/adding-video-chat-to-your-laravel-app-5ak7)
+
+2. **Agora Platform Applications**
+   * **Build a Scalable Video Chat App with Agora in Laravel**<br/>
+     This is one-on-one video call application with [Agora Platform](https://agora.io)<br/>
+     [Medium Link](https://mupati.medium.com/build-a-scalable-video-chat-app-with-agora-in-laravel-29e73c97f9b0)<br/>
+     [Dev.to Link](https://dev.to/mupati/using-agora-for-your-laravel-video-chat-app-1mo)
+
+3. **[Wossop](https://wossop.netlify.app/)**<br/>
+   This is a messaging and video chat application with the WhatsApp web interface.<br/>
+   The APIs are in this repository but the frontend sits elsewhere. I don't plan to blog about it.
+
+## Test Accounts for the Application
 1. Visit Demo url: https://laravel-video-call.herokuapp.com/login
 2. Login with these test accounts and test it <br/>
     email:            password <br/>
     foo@example.com:  DY6m7feJtbnx3ud<br/>
     bar@example.com:  Me3tm5reQpWcn3Q<br/>
 
+
+# UI for one-on-one Video Call with WebRTC 
 ### Incoming Call UI
 ![Incoming Call](https://dev-to-uploads.s3.amazonaws.com/i/1qk47qwka8iz0m43tmdu.png)
 
