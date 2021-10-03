@@ -16,3 +16,10 @@ resources/js/components/BroadcasterCorrect.vue
 resources/js/components/BroadcasterOld.vue
 resources/js/components/ViewerCorrect.vue
 resources/js/components/ViewerOld.vue
+
+
+# todo
+todo.txt
+
+#test editor
+.vscode

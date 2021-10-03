@@ -13,9 +13,9 @@
         gtag('js', new Date());
 
         gtag('config', 'G-7JEP9FDZ4Z');
-
     </script>
-        <script data-ad-client="ca-pub-4564109234786835" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script data-ad-client="ca-pub-4564109234786835" async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -505,8 +505,9 @@
                         <div class="ml-12">
                             <div class="mt-2 text-gray-600 dark:text-gray-400 text-sm">
                                 A Whatsapp Web Clone with [Login and Registration]. This is an SPA with a Laravel API
-                                and Sanctum for Authentication. The
-                                frontend sits elsewhere
+                                and Sanctum for Authentication. <a href="https://github.com/Mupati/whatsapp-clone"
+                                    target="_blank" class="underline text-gray-900 dark:text-white">Download Frontend
+                                    Code</a>
                             </div>
                         </div>
                     </div>
