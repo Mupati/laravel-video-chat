@@ -7,6 +7,12 @@ write on [Dev.to](https://dev.to/mupati) and [Medium](https://mupati.medium.com)
 
 There are endpoints for some other applications I've built as well.
 
+## Consider Sponsoring.
+I plan to explore various Real Time Communication offerings and build demo apps and write about them. To keep me going, you may consider sponsoring so that I dedicate a enough time to it since a lot of people seems to have found it helpful given the number of emails and queries I receive for support in one way or the other.
+
+[:heart: Sponsor](https://dashboard.flutterwave.com/donate/9oiquwbuo2ml)
+
+
 ## Project Setup
 
 1. Clone the repository.<br/>
