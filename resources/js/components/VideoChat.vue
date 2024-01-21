@@ -166,6 +166,7 @@ export default {
   methods: {
     initializeChannel() {
       this.videoCallParams.channel = window.Echo.join("presence-video-channel");
+ 		console.log('Initializing Laravel Echo and subscribing to channels.');
     },
 
     getMediaPermission() {
@@ -194,6 +195,7 @@ export default {
         if (joiningUserIndex < 0) {
           this.videoCallParams.users.push(user);
         }
+         console.log('Setting up call listeners for real-time events.');
       });
 
       this.videoCallParams.channel.leaving((user) => {
@@ -219,9 +221,11 @@ export default {
       });
     },
     async placeVideoCall(id, name) {
+      
       this.callPlaced = true;
       this.callPartner = name;
       await this.getMediaPermission();
+      console.log("TURN Server URL:", this.turn_url); // Add this line for debugging
       this.videoCallParams.peer1 = new Peer({
         initiator: true,
         trickle: false,
@@ -230,8 +234,7 @@ export default {
           iceServers: [
             {
               urls: this.turn_url,
-              username: this.turn_username,
-              credential: this.turn_credential,
+          
             },
           ],
         },
@@ -301,8 +304,7 @@ export default {
           iceServers: [
             {
               urls: this.turn_url,
-              username: this.turn_username,
-              credential: this.turn_credential,
+          
             },
           ],
         },
