@@ -33,7 +33,14 @@ import Echo from "laravel-echo";
 window.Pusher = require("pusher-js");
 window.Echo = new Echo({
     broadcaster: "pusher",
-    key: process.env.MIX_PUSHER_APP_KEY,
-    cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-    forceTLS: true
+    key: "abc",
+    cluster: "mt1",
+    encrypted: false,
+    wsPort: 80,
+    disableState: true,
+    wsHost: "www.halotamrin.ir",
+    forceTLS: true,
+    useTLS: true,
+    wssPort: 443,
+    enabledTransports: ["wss" , "ws"],
 });

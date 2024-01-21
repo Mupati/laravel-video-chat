@@ -55,7 +55,7 @@ class User extends Authenticatable
     ];
 
 
-    public function getAvatarUrlAttribute()
+    /*public function getAvatarUrlAttribute()
     {
 
         $exists = Storage::disk('s3')->exists($this->avatar_path);
@@ -65,4 +65,31 @@ class User extends Authenticatable
         }
         return null;
     }
+    */
+  
+  public function getAvatarUrlAttribute()
+  {
+      // Use the md5 hash of the user's email address to generate a Gravatar URL
+      $emailHash = md5(strtolower(trim($this->attributes['email'])));
+
+      // Gravatar URL format
+      $gravatarUrl = "https://www.gravatar.com/avatar/{$emailHash}?s=200";
+
+      return $gravatarUrl;
+  }
+
+  protected static function boot()
+    
+  {
+    parent::boot();
+
+    // Add an event listener to the 'created' event
+    static::created(function ($user) {
+      // Set the avatar url when the user is created
+      $user->avatar_path = $user->getAvatarUrlAttribute();
+      $user->save();
+    });
+  }
+
+
 }

@@ -3,7 +3,7 @@
 
 <head>
     <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7JEP9FDZ4Z"></script>
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-7JEP9FDZ4Z"></script> -->
     <script>
         window.dataLayer = window.dataLayer || [];
 
@@ -15,7 +15,7 @@
         gtag('config', 'G-7JEP9FDZ4Z');
 
     </script>
-    <script data-ad-client="ca-pub-4564109234786835" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <!-- <script data-ad-client="ca-pub-4564109234786835" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
